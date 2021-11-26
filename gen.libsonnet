@@ -11,10 +11,8 @@ local getVersionInDefinition(definition, version) =
   else versions[0];
 
 local createFunction(name, parents) =
-  //local b = std.trace('name:' + name, name);
-  local n = name;  //std.trace('parents:' + std.toString(parents), b);
   {
-    ['with' + std.asciiUpper(n[0]) + name[1:]]:  //(value):
+    ['with' + std.asciiUpper(name[0]) + name[1:]]:  //(value):
       std.foldr(
         function(p, acc)
           if p == name
