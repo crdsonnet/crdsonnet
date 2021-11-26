@@ -64,7 +64,7 @@ local propertyToValue(name, parents, property) =
             || std.objectHas(property, 'anyOf')
     then 'xOf'
 
-    else error "can't find type"
+    else std.trace("info: can't find type for " + std.join('.', parents), '')
   ;
 
   createFunction(name, parents)
