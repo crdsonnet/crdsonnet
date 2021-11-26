@@ -7,9 +7,7 @@ std.foldl(
   function(acc, m)
     local manifest = manifests[m];
     acc +
-    if manifest != null
-       && std.objectHas(manifest, 'kind')
-       && manifest.kind == 'CustomResourceDefinition'
+    if manifest.kind == 'CustomResourceDefinition'
     then gen(manifest)
     else {},
   std.objectFields(manifests),
