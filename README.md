@@ -1,9 +1,23 @@
 # Jsonnet CRD generator
 
-This is a POC to generate a Jsonnet library at runtime from a CRD. The current script
-simply outputs a JSON representation of how the library would look like.
+A library to generate a *runtime* Jsonnet library directly from a CRD.
 
-The demo depends on Tanka and Kustomize, try it:
+## Example usage
+
+```jsonnet
+local gen = import 'gen.libsonnet';
+local example = gen.generate(someCustomResourceDefinition, 'example.io');
+
+{
+  example_object: example.core.v1.someObject.new(name='example'),
+  inspect: gen.inspect('example', example),
+}
+```
+
+## Demo
+
+The demo outputs a JSON represetation of the runtime library using the `gen.inspect()`
+function, below commands depend on Tanka and Kustomize, try it:
 
 ```
 tk eval crossplane/main.jsonnet
