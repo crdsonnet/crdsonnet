@@ -1,6 +1,6 @@
-# Runtime Jsonnet library for CRDs
+# CRDsonnet
 
-A library to generate a *runtime* Jsonnet library directly from a CRD.
+Generate a *runtime* Jsonnet library directly from a CRD.
 
 ## Example usage
 
