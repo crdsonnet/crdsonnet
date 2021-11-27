@@ -9,6 +9,16 @@
         }
       },
       "version": "master"
+    },
+    {
+      "source": {
+        "git": {
+          "remote": "https://github.com/kubernetes/kubernetes.git",
+          "subdir": "api/openapi-spec/v3"
+        }
+      },
+      "name": "kubernetes-spec-v1.23",
+      "version": "release-1.23"
     }
   ],
   "legacyImports": true
