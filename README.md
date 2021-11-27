@@ -1,4 +1,4 @@
-# Jsonnet CRD generator
+# Runtime Jsonnet library for CRDs
 
 A library to generate a *runtime* Jsonnet library directly from a CRD.
 
