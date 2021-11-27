@@ -114,11 +114,11 @@ local propertyToValue(name, parents, property, debug=false) =
 
       else if std.objectHas(property.items, '$ref')
       then
-        // NOTE: big assumption that $ref refers to k8s components only
         local ref = std.split(property.items['$ref'], '/')[3];
         handleObject(
           name,
           parents,
+          // NOTE: assumption that $ref refers to k8s components only
           k8s.components.schemas[ref].properties
         )
 
@@ -132,32 +132,40 @@ local propertyToValue(name, parents, property, debug=false) =
   );
 
 {
-  generate(definition, debug=false):
+  generate(definition, group_suffix, debug=false):
     local kind = definition.spec.names.kind;
+    local group =
+      // NOTE: several assumption about grouping
+      if group_suffix == definition.spec.group
+      then 'nogroup'
+      else std.split(std.strReplace(definition.spec.group, '.' + group_suffix, ''), '.')[0];
+
     std.foldl(
       function(acc, v)
         acc {
-          [v]+: {
-            [std.asciiLower(kind[0]) + kind[1:]]:
-              local schema =
-                getVersionInDefinition(definition, v).schema.openAPIV3Schema;
-              std.foldl(
-                function(acc, p)
-                  acc + propertyToValue(
-                    p,
-                    [p],
-                    schema.properties[p],
-                    debug
-                  ),
-                std.objectFields(schema.properties),
-                {}
-              )
-              + {
-                new(name):
-                  self.withApiVersion(definition.spec.group + '/' + v)
-                  + self.withKind(kind)
-                  + self.metadata.withName(name),
-              },
+          [group]+: {
+            [v]+: {
+              [std.asciiLower(kind[0]) + kind[1:]]:
+                local schema =
+                  getVersionInDefinition(definition, v).schema.openAPIV3Schema;
+                std.foldl(
+                  function(acc, p)
+                    acc + propertyToValue(
+                      p,
+                      [p],
+                      schema.properties[p],
+                      debug
+                    ),
+                  std.objectFields(schema.properties),
+                  {}
+                )
+                + {
+                  new(name):
+                    self.withApiVersion(definition.spec.group + '/' + v)
+                    + self.withKind(kind)
+                    + self.metadata.withName(name),
+                },
+            },
           },
         },
       [

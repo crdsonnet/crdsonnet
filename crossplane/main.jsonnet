@@ -8,7 +8,7 @@ local crossplane = std.foldl(
     local manifest = manifests[m];
     acc +
     if manifest.kind == 'CustomResourceDefinition'
-    then gen.generate(manifest)
+    then gen.generate(manifest, 'crossplane.io')
     else {},
   std.objectFields(manifests),
   {}
