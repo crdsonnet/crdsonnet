@@ -143,67 +143,67 @@ local k8s = import 'kubernetes-spec-v1.23/api__v1_openapi.json';
       else {}
     ),
 
-  fromSchema(group, version, kind, schema): {
+  fromSchema(grouping, group, version, kind, schema): {
     local kindname =
       local s = camelcase.split(kind);
       std.asciiLower(s[0]) + std.join('', s[1:]),
 
-    [version]+: {
-      [kindname]:
-        std.foldl(
-          function(acc, p)
-            acc + this.propertyToValue(
-              p,
-              [p],
-              schema.properties[p],
-            ),
-          std.objectFields(schema.properties),
-          {}
-        )
-        +
-        if std.objectHas(schema, 'x-kubernetes-group-version-kind')
-        then {
-          new(name):
-            local gvk = schema['x-kubernetes-group-version-kind'];
-            local gv =
-              if gvk.group == ''
-              then gvk.version
-              else gvk.group + '/' + gvk.version;
+    [grouping]+: {
+      [version]+: {
+        [kindname]:
+          std.foldl(
+            function(acc, p)
+              acc + this.propertyToValue(
+                p,
+                [p],
+                schema.properties[p],
+              ),
+            std.objectFields(schema.properties),
+            {}
+          )
+          +
+          if std.objectHas(schema, 'x-kubernetes-group-version-kind')
+          then {
+            new(name):
+              local gvk = schema['x-kubernetes-group-version-kind'];
+              local gv =
+                if gvk[0].group == ''
+                then gvk[0].version
+                else gvk[0].group + '/' + gvk.version;
 
-            self.withApiVersion(gv)
-            + self.withKind(kind)
-            + self.metadata.withName(name),
-        }
-        else if std.objectHas(schema.properties, 'kind')
-        then {
-          new(name):
-            self.withApiVersion(group + '/' + version)
-            + self.withKind(kind)
-            + self.metadata.withName(name),
-        }
-        else {},
+              self.withApiVersion(gv)
+              + self.withKind(kind)
+              + self.metadata.withName(name),
+          }
+          else if std.objectHas(schema.properties, 'kind')
+          then {
+            new(name):
+              self.withApiVersion(group + '/' + version)
+              + self.withKind(kind)
+              + self.metadata.withName(name),
+          }
+          else {},
+      },
     },
   },
 
   fromCRD(definition, group_suffix):
-    local kind = definition.spec.names.kind;
-    local group =
-      // NOTE: several assumption about grouping
+    local grouping =
+      // If no dedicated API group, then use nogroup key for consistency
       if group_suffix == definition.spec.group
       then 'nogroup'
       else std.split(std.strReplace(definition.spec.group, '.' + group_suffix, ''), '.')[0];
 
     std.foldl(
       function(acc, v)
-        acc {
-          [group]+:
-            this.fromSchema(
-              definition.spec.group,
-              v,
-              definition.spec.names.kind,
-              getVersionInDefinition(definition, v).schema.openAPIV3Schema,
-            ),
-        },
+        acc
+        + this.fromSchema(
+          grouping,
+          definition.spec.group,
+          v,
+          definition.spec.names.kind,
+          getVersionInDefinition(definition, v).schema.openAPIV3Schema,
+        ),
       [
         version.name
         for version in definition.spec.versions
