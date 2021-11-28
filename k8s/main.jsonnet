@@ -22,6 +22,6 @@ local k8s =
   );
 
 
-gen.inspect('k8s', k8s)
+gen.inspect(k8s, 3)
 //k8s.core.v1.pod.new('a')
 

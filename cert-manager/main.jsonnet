@@ -15,6 +15,6 @@ local cert_manager = std.foldl(
 );
 
 
-gen.inspect('cert_manager', cert_manager)
+gen.inspect(cert_manager, 3)
 //cert_manager.nogroup.v1.certificate.new('a')
 

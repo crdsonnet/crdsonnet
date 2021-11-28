@@ -6,11 +6,11 @@ Generate a *runtime* Jsonnet library directly from a CRD.
 
 ```jsonnet
 local gen = import 'gen.libsonnet';
-local example = gen.generate(someCustomResourceDefinition, 'example.io');
+local example = gen.fromDefinition(someCustomResourceDefinition, 'example.io');
 
 {
   example_object: example.core.v1.someObject.new(name='example'),
-  inspect: gen.inspect('example', example),
+  inspect: gen.inspect(example),
 }
 ```
 

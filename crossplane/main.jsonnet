@@ -15,7 +15,7 @@ local crossplane = std.foldl(
 );
 
 
-gen.inspect('crossplane', crossplane)
+gen.inspect(crossplane, 3)
 //crossplane.pkg.v1.provider.new('provider-gcp')
 //+ crossplane.pkg.v1.provider.spec.withPackage('crossplane/provider-gcp:master')
 
