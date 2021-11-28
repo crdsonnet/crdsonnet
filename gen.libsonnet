@@ -59,7 +59,7 @@ local k8s = import 'kubernetes-spec-v1.23/api__v1_openapi.json';
       {}
     ),
 
-  propertyToValue(name, parents, property):
+  propertyToValue(name, parents, property, siblings={}):
     local infoMessage(message, return) =
       if debug
       then std.trace('INFO: ' + message, return)
@@ -87,6 +87,15 @@ local k8s = import 'kubernetes-spec-v1.23/api__v1_openapi.json';
       if type == 'array'
       then appendFunction(name, parents)
 
+      else if type == 'ref' && siblings != {}
+      then
+        local ref = std.split(property['$ref'], '/')[3];
+        this.propertyToValue(
+          name,
+          parents,
+          siblings[ref]
+        )
+
       else if type == 'object'
               && name == 'metadata'
       then handleObject(
@@ -103,15 +112,6 @@ local k8s = import 'kubernetes-spec-v1.23/api__v1_openapi.json';
         property.properties
       )
 
-      else if type == 'ref'
-      then
-        local ref = std.split(property['$ref'], '/')[3];
-        this.propertyToValue(
-          name,
-          parents,
-          k8s.components.schemas[ref]
-        )
-
       else {}
     ) + (
       if std.objectHas(property, 'items')
@@ -124,14 +124,13 @@ local k8s = import 'kubernetes-spec-v1.23/api__v1_openapi.json';
           property.items.properties,
         )
 
-        else if std.objectHas(property.items, '$ref')
+        else if std.objectHas(property.items, '$ref') && siblings != {}
         then
           local ref = std.split(property.items['$ref'], '/')[3];
           handleObject(
             name,
             parents,
-            // NOTE: assumption that $ref refers to k8s components only
-            k8s.components.schemas[ref].properties,
+            siblings[ref].properties,
           )
 
         else if !std.objectHas(property.items, 'type')
@@ -143,7 +142,7 @@ local k8s = import 'kubernetes-spec-v1.23/api__v1_openapi.json';
       else {}
     ),
 
-  fromSchema(grouping, group, version, kind, schema): {
+  fromSchema(grouping, group, version, kind, schema, siblings={}): {
     local kindname =
       local s = camelcase.split(kind);
       std.asciiLower(s[0]) + std.join('', s[1:]),
@@ -157,6 +156,7 @@ local k8s = import 'kubernetes-spec-v1.23/api__v1_openapi.json';
                 p,
                 [p],
                 schema.properties[p],
+                siblings,
               ),
             std.objectFields(schema.properties),
             {}

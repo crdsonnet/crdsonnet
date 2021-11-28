@@ -13,7 +13,8 @@ local k8s =
           items[2],
           items[1],
           items[0],
-          kapi.components.schemas[m]
+          kapi.components.schemas[m],
+          kapi.components.schemas,
         )
       else acc,
     std.objectFields(kapi.components.schemas),
