@@ -3,6 +3,24 @@
 {
   split:: split,
 
+  local isLower(c) =
+    local cp(c) = std.codepoint(c);
+    if cp(c) >= 97 && cp(c) < 123
+    then true
+    else false,
+
+  local isUpper(c) =
+    local cp(c) = std.codepoint(c);
+    if cp(c) >= 65 && cp(c) < 91
+    then true
+    else false,
+
+  local isNumber(c) =
+    local cp(c) = std.codepoint(c);
+    if std.isNumber(c) || (cp(c) >= 48 && cp(c) < 58)
+    then true
+    else false,
+
   local split(src) =
     if src == ''
     then ['']
@@ -11,11 +29,11 @@
         function(acc, r)
           acc {
             local class =
-              if std.member(['' + i for i in std.range(0, 9)], r)
+              if isNumber(r)
               then 1
-              else if r == std.asciiLower(r) && r != ' '
+              else if isLower(r)
               then 2
-              else if r == std.asciiUpper(r) && r != ' '
+              else if isUpper(r)
               then 3
               else 4,
 
@@ -83,7 +101,8 @@
     'Two  spaces': split('Two  spaces') == ['Two', '  ', 'spaces'],
     'Multiple   Random  spaces': split('Multiple   Random  spaces') == ['Multiple', '   ', 'Random', '  ', 'spaces'],
 
-    // There are no std functions to check casing for non-ascii characters.
+    // TODO: find or create is(Upper|Lower) for non-ascii characters
+    // Something like this for Jsonnet: https://cs.opensource.google/go/go/+/refs/tags/go1.17.3:src/unicode/tables.go
     //'BöseÜberraschung': split('BöseÜberraschung') == ['Böse', 'Überraschung'],
 
     // This doesn't even render in Jsonnet

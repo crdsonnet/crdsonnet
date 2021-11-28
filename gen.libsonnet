@@ -103,6 +103,15 @@ local k8s = import 'kubernetes-spec-v1.23/api__v1_openapi.json';
         property.properties
       )
 
+      else if type == 'ref'
+      then
+        local ref = std.split(property['$ref'], '/')[3];
+        this.propertyToValue(
+          name,
+          parents,
+          k8s.components.schemas[ref]
+        )
+
       else {}
     ) + (
       if std.objectHas(property, 'items')
@@ -151,12 +160,28 @@ local k8s = import 'kubernetes-spec-v1.23/api__v1_openapi.json';
           std.objectFields(schema.properties),
           {}
         )
-        + {
+        +
+        if std.objectHas(schema, 'x-kubernetes-group-version-kind')
+        then {
+          new(name):
+            local gvk = schema['x-kubernetes-group-version-kind'];
+            local gv =
+              if gvk.group == ''
+              then gvk.version
+              else gvk.group + '/' + gvk.version;
+
+            self.withApiVersion(gv)
+            + self.withKind(kind)
+            + self.metadata.withName(name),
+        }
+        else if std.objectHas(schema.properties, 'kind')
+        then {
           new(name):
             self.withApiVersion(group + '/' + version)
             + self.withKind(kind)
             + self.metadata.withName(name),
-        },
+        }
+        else {},
     },
   },
 
