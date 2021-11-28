@@ -45,14 +45,15 @@ local k8s = import 'kubernetes-spec-v1.23/api__v1_openapi.json';
         ),
     },
 
-  local handleObject(name, parents, properties) =
+  local handleObject(name, parents, properties, siblings={}) =
     std.foldl(
       function(acc, p)
         acc {
           [name]+: this.propertyToValue(
             p,
             parents + [p],
-            properties[p]
+            properties[p],
+            siblings,
           ),
         },
       std.objectFields(properties),
@@ -93,7 +94,8 @@ local k8s = import 'kubernetes-spec-v1.23/api__v1_openapi.json';
         this.propertyToValue(
           name,
           parents,
-          siblings[ref]
+          siblings[ref],
+          siblings,
         )
 
       else if type == 'object'
@@ -101,7 +103,8 @@ local k8s = import 'kubernetes-spec-v1.23/api__v1_openapi.json';
       then handleObject(
         name,
         parents,
-        k8s.components.schemas['io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta'].properties
+        k8s.components.schemas['io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta'].properties,
+        siblings,
       )
 
       else if type == 'object'
@@ -109,7 +112,8 @@ local k8s = import 'kubernetes-spec-v1.23/api__v1_openapi.json';
       then handleObject(
         name,
         parents,
-        property.properties
+        property.properties,
+        siblings,
       )
 
       else {}
@@ -122,6 +126,7 @@ local k8s = import 'kubernetes-spec-v1.23/api__v1_openapi.json';
           name,
           parents,
           property.items.properties,
+          siblings,
         )
 
         else if std.objectHas(property.items, '$ref') && siblings != {}
@@ -131,6 +136,7 @@ local k8s = import 'kubernetes-spec-v1.23/api__v1_openapi.json';
             name,
             parents,
             siblings[ref].properties,
+            siblings,
           )
 
         else if !std.objectHas(property.items, 'type')
@@ -150,17 +156,20 @@ local k8s = import 'kubernetes-spec-v1.23/api__v1_openapi.json';
     [grouping]+: {
       [version]+: {
         [kindname]:
-          std.foldl(
-            function(acc, p)
-              acc + this.propertyToValue(
-                p,
-                [p],
-                schema.properties[p],
-                siblings,
-              ),
-            std.objectFields(schema.properties),
-            {}
-          )
+          (if std.objectHas(schema, 'properties')
+           then
+             std.foldl(
+               function(acc, p)
+                 acc + this.propertyToValue(
+                   p,
+                   [p],
+                   schema.properties[p],
+                   siblings,
+                 ),
+               std.objectFields(schema.properties),
+               {}
+             )
+           else {})
           +
           if std.objectHas(schema, 'x-kubernetes-group-version-kind')
           then {
@@ -175,7 +184,8 @@ local k8s = import 'kubernetes-spec-v1.23/api__v1_openapi.json';
               + self.withKind(kind)
               + self.metadata.withName(name),
           }
-          else if std.objectHas(schema.properties, 'kind')
+          else if std.objectHas(schema, 'properties')
+                  && std.objectHas(schema.properties, 'kind')
           then {
             new(name):
               self.withApiVersion(group + '/' + version)
