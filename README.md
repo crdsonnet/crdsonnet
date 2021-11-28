@@ -2,6 +2,9 @@
 
 Generate a *runtime* Jsonnet library directly from a CRD.
 
+> Note: This is not a polished project yet, I would not even consider it alpha, rather a
+> POC to demonstrate the idea.
+
 ## Example usage
 
 ```jsonnet
@@ -22,4 +25,11 @@ function, below commands depend on Tanka and Kustomize, try it:
 ```
 tk eval crossplane/main.jsonnet
 tk eval cert-manager/main.jsonnet
+```
+
+The k8s lib can be rendered in pure jsonnet:
+
+
+```
+jsonnet -J vendor k8s/main.jsonnet
 ```
