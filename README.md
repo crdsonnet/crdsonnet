@@ -1,6 +1,6 @@
 # CRDsonnet
 
-Generate a *runtime* Jsonnet library directly from a CRD.
+Generate a *runtime* Jsonnet library directly from a CRD or OpenAPI v3 spec.
 
 > Note: This is not a polished project yet, I would not even consider it alpha, rather a
 > POC to demonstrate the idea.
