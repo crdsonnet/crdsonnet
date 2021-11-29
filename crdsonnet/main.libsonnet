@@ -1,5 +1,5 @@
 local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
-local k8s = import 'kubernetes-spec-v1.23/api__v1_openapi.json';
+local k8s = import 'kubernetes-spec/swagger.json';
 
 {
   local this = self,
@@ -105,7 +105,7 @@ local k8s = import 'kubernetes-spec-v1.23/api__v1_openapi.json';
       then handleObject(
         name,
         parents,
-        k8s.components.schemas['io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta'].properties,
+        k8s.definitions['io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta'].properties,
         siblings,
       )
 
