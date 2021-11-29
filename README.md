@@ -5,10 +5,16 @@ Generate a *runtime* Jsonnet library directly from a CRD or OpenAPI v3 spec.
 > Note: This is not a polished project yet, I would not even consider it alpha, rather a
 > POC to demonstrate the idea.
 
-## Example usage
+## Install
+
+```console
+jb install https://github.com/Duologic/docsonnet/docsonnet
+```
+
+## Usage
 
 ```jsonnet
-local gen = import 'gen.libsonnet';
+local gen = import 'github.com/Duologic/docsonnet/docsonnet/main.libsonnet';
 local example = gen.fromDefinition(someCustomResourceDefinition, 'example.io');
 
 {

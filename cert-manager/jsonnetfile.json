@@ -10,16 +10,6 @@
       },
       "name": "cert-manager-crds",
       "version": "v1.3.1"
-    },
-    {
-      "source": {
-        "git": {
-          "remote": "https://github.com/kubernetes/kubernetes.git",
-          "subdir": "api/openapi-spec/v3"
-        }
-      },
-      "version": "release-1.23",
-      "name": "kubernetes-spec-v1.23"
     }
   ],
   "legacyImports": true
