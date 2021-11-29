@@ -66,6 +66,9 @@ local k8s = import 'kubernetes-spec-v1.23/api__v1_openapi.json';
       then std.trace('INFO: ' + message, return)
       else return;
 
+    local ref(property) =
+      std.reverse(std.split(property['$ref'], '/'))[0];
+
     local type =
       if std.objectHas(property, 'type')
       then property.type
@@ -90,11 +93,10 @@ local k8s = import 'kubernetes-spec-v1.23/api__v1_openapi.json';
 
       else if type == 'ref' && siblings != {}
       then
-        local ref = std.split(property['$ref'], '/')[3];
         this.propertyToValue(
           name,
           parents,
-          siblings[ref],
+          siblings[ref(property)],
           siblings,
         )
 
@@ -131,11 +133,10 @@ local k8s = import 'kubernetes-spec-v1.23/api__v1_openapi.json';
 
         else if std.objectHas(property.items, '$ref') && siblings != {}
         then
-          local ref = std.split(property.items['$ref'], '/')[3];
           handleObject(
             name,
             parents,
-            siblings[ref].properties,
+            siblings[ref(property.items)].properties,
             siblings,
           )
 
