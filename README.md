@@ -8,13 +8,13 @@ Generate a *runtime* Jsonnet library directly from a CRD or OpenAPI v3 spec.
 ## Install
 
 ```console
-jb install https://github.com/Duologic/docsonnet/docsonnet
+jb install https://github.com/Duologic/crdsonnet/crdsonnet
 ```
 
 ## Usage
 
 ```jsonnet
-local gen = import 'github.com/Duologic/docsonnet/docsonnet/main.libsonnet';
+local gen = import 'github.com/Duologic/crdsonnet/crdsonnet/main.libsonnet';
 local example = gen.fromDefinition(someCustomResourceDefinition, 'example.io');
 
 {
