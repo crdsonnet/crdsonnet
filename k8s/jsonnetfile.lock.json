@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "dependencies": [
+    {
+      "source": {
+        "git": {
+          "remote": "https://github.com/grafana/jsonnet-libs.git",
+          "subdir": "tanka-util"
+        }
+      },
+      "version": "84900d9dc450116ad66864f48088f92ccae36c54",
+      "sum": "AGgjH6IJe/1qwNtxFIiG8V1uyOJZascEydQsNrfPQ4c="
+    },
+    {
+      "source": {
+        "git": {
+          "remote": "https://github.com/jsonnet-libs/docsonnet.git",
+          "subdir": "doc-util"
+        }
+      },
+      "version": "fc3f9bca2dff836b0e924a993bdf11bc51af78d4",
+      "sum": "JUBWG9ybm0TlY3uCWrNoQS00BcfPlCvuK9jPFU0NIj8="
+    },
+    {
+      "source": {
+        "git": {
+          "remote": "https://github.com/kubernetes/kubernetes.git",
+          "subdir": "api/openapi-spec/v3"
+        }
+      },
+      "version": "a117a51aa497a516106a3115963437218493c8d2",
+      "sum": "OEUtzGT1cWX1wwlsWxxI6Kn7wEYS2FkHXajXoMVPtOY=",
+      "name": "kubernetes-spec-v1.23"
+    }
+  ],
+  "legacyImports": false
+}

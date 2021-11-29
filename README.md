@@ -20,16 +20,18 @@ local example = gen.fromDefinition(someCustomResourceDefinition, 'example.io');
 ## Demo
 
 The demo outputs a JSON represetation of the runtime library using the `gen.inspect()`
-function, below commands depend on Tanka and Kustomize, try it:
+function, try it:
+
+> Note: This library does lots of recursions, notice the `--max-stack`.
+
+```
+jsonnet --max-stack 1000 -J k8s/vendor k8s/main.jsonnet
+jsonnet -J cert-manager/vendor cert-manager/main.jsonnet
+```
+
+The `crossplane` example depends on Tanka and Kustomize:
 
 ```
 tk eval crossplane/main.jsonnet
-tk eval cert-manager/main.jsonnet
 ```
 
-The k8s lib can be rendered in pure jsonnet:
-
-
-```
-jsonnet -J vendor k8s/main.jsonnet
-```

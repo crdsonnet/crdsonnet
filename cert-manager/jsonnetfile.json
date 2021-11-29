@@ -4,11 +4,12 @@
     {
       "source": {
         "git": {
-          "remote": "https://github.com/grafana/jsonnet-libs.git",
-          "subdir": "tanka-util"
+          "remote": "https://github.com/jetstack/cert-manager.git",
+          "subdir": "deploy/crds"
         }
       },
-      "version": "master"
+      "name": "cert-manager-crds",
+      "version": "v1.3.1"
     },
     {
       "source": {

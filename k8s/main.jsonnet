@@ -1,5 +1,4 @@
 local gen = import '../gen.libsonnet';
-local kapi = import 'kubernetes-spec-v1.23/api__v1_openapi.json';
 
 local spec = [
   import 'kubernetes-spec-v1.23/api_openapi.json',

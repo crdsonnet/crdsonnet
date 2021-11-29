@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "dependencies": [
+    {
+      "source": {
+        "git": {
+          "remote": "https://github.com/jetstack/cert-manager.git",
+          "subdir": "deploy/crds"
+        }
+      },
+      "version": "614438aed00e1060870b273f2238794ef69b60ab",
+      "sum": "oiak6wkRszG0S1fVNMvWEVJdiRWAvEJktjuLkHmdnU0=",
+      "name": "cert-manager-crds"
+    },
+    {
+      "source": {
+        "git": {
+          "remote": "https://github.com/kubernetes/kubernetes.git",
+          "subdir": "api/openapi-spec/v3"
+        }
+      },
+      "version": "a117a51aa497a516106a3115963437218493c8d2",
+      "sum": "OEUtzGT1cWX1wwlsWxxI6Kn7wEYS2FkHXajXoMVPtOY=",
+      "name": "kubernetes-spec-v1.23"
+    }
+  ],
+  "legacyImports": false
+}
