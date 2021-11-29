@@ -1,4 +1,4 @@
-local camelcase = import 'camelcase.libsonnet';
+local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
 local k8s = import 'kubernetes-spec-v1.23/api__v1_openapi.json';
 
 {
@@ -150,7 +150,7 @@ local k8s = import 'kubernetes-spec-v1.23/api__v1_openapi.json';
 
   fromSchema(grouping, group, version, kind, schema, siblings={}): {
     local kindname =
-      local s = camelcase.split(kind);
+      local s = xtd.camelcase.split(kind);
       std.asciiLower(s[0]) + std.join('', s[1:]),
 
     [grouping]+: {
