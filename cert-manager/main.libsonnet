@@ -1,4 +1,4 @@
-local gen = import '../gen.libsonnet';
+local gen = import 'github.com/Duologic/crdsonnet/crdsonnet/main.libsonnet';
 
 local parseYaml(str) =
   if std.native('parseYaml') != null
@@ -23,7 +23,7 @@ local manifests = std.flattenArrays([
   parseYaml(importstr 'cert-manager-crds/crd-orders.yaml'),
 ]);
 
-local cert_manager = std.foldl(
+std.foldl(
   function(acc, manifest)
     acc +
     if manifest.kind == 'CustomResourceDefinition'
@@ -31,7 +31,4 @@ local cert_manager = std.foldl(
     else {},
   manifests,
   {}
-);
-
-//cert_manager.nogroup.v1.certificate.new('a')
-gen.inspect(cert_manager, 3)
+)

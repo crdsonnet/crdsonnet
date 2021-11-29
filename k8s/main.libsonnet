@@ -1,4 +1,4 @@
-local gen = import '../gen.libsonnet';
+local gen = import 'github.com/Duologic/crdsonnet/crdsonnet/main.libsonnet';
 
 local spec = [
   import 'kubernetes-spec-v1.23/api_openapi.json',
@@ -59,34 +59,31 @@ local spec = [
   import 'kubernetes-spec-v1.23/version_openapi.json',
 ];
 
-local k8s =
-  std.foldl(
-    function(acc, f)
-      acc +
-      (
-        if std.objectHas(f, 'components') && std.objectHas(f.components, 'schemas')
-        then
-          std.foldl(
-            function(acc, m)
-              local items = std.reverse(std.split(m, '.'));
-              if std.startsWith(m, 'io.k8s.api.')
-              then
-                acc + gen.fromSchema(
-                  items[2],
-                  items[2],
-                  items[1],
-                  items[0],
-                  f.components.schemas[m],
-                  f.components.schemas,
-                )
-              else acc,
-            std.objectFields(f.components.schemas),
-            {}
-          )
-        else {}
-      ),
-    spec,
-    {}
-  );
-
-gen.inspect(k8s, 4)
+std.foldl(
+  function(acc, f)
+    acc +
+    (
+      if std.objectHas(f, 'components') && std.objectHas(f.components, 'schemas')
+      then
+        std.foldl(
+          function(acc, m)
+            local items = std.reverse(std.split(m, '.'));
+            if std.startsWith(m, 'io.k8s.api.')
+            then
+              acc + gen.fromSchema(
+                items[2],
+                items[2],
+                items[1],
+                items[0],
+                f.components.schemas[m],
+                f.components.schemas,
+              )
+            else acc,
+          std.objectFields(f.components.schemas),
+          {}
+        )
+      else {}
+    ),
+  spec,
+  {}
+)

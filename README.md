@@ -31,13 +31,13 @@ function, try it:
 > Note: This library does lots of recursions, notice the `--max-stack`.
 
 ```
-jsonnet --max-stack 1000 -J k8s/vendor k8s/main.jsonnet
-jsonnet -J cert-manager/vendor cert-manager/main.jsonnet
+jsonnet --max-stack 1000 -J k8s/vendor k8s/inspect.libsonnet
+jsonnet -J cert-manager/vendor cert-manager/inspect.libsonnet
 ```
 
 The `crossplane` example depends on Tanka and Kustomize:
 
 ```
-tk eval crossplane/main.jsonnet
+tk eval crossplane/inspect.libsonnet
 ```
 
