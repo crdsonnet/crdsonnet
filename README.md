@@ -28,16 +28,25 @@ local example = gen.fromDefinition(someCustomResourceDefinition, 'example.io');
 The demo outputs a JSON represetation of the runtime library using the `gen.inspect()`
 function, try it:
 
-> Note: This library does lots of recursions, notice the `--max-stack`.
+```
+cd cert-manager
+jb install
+jsonnet -J vendor inspect.libsonnet
+```
 
 ```
-jsonnet --max-stack 1000 -J k8s/vendor k8s/inspect.libsonnet
-jsonnet -J cert-manager/vendor cert-manager/inspect.libsonnet
+cd k8s
+jb install
+jsonnet -J vendor inspect.libsonnet
 ```
 
 The `crossplane` demo depends on Tanka and Kustomize:
 
 ```
+cd crossplane
+jb install
 tk eval crossplane/inspect.libsonnet
 ```
+
+## Debug
 
