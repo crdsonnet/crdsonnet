@@ -35,7 +35,7 @@ jsonnet --max-stack 1000 -J k8s/vendor k8s/inspect.libsonnet
 jsonnet -J cert-manager/vendor cert-manager/inspect.libsonnet
 ```
 
-The `crossplane` example depends on Tanka and Kustomize:
+The `crossplane` demo depends on Tanka and Kustomize:
 
 ```
 tk eval crossplane/inspect.libsonnet

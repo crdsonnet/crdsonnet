@@ -7,7 +7,7 @@ local parseYaml(str) =
     std.native('parseYaml')(str)
   else
     // supported in standard lib
-    // wrap output in array for consisten output
+    // wrap output in array for consistent output
     local i = std.parseYaml(str);
     if std.isArray(i)
     then i
