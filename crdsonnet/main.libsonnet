@@ -150,6 +150,7 @@ local k8s = import 'kubernetes-spec/swagger.json';
         )
 
         else if std.objectHas(property.items, '$ref') && siblings != {}
+                && std.objectHas(siblings[ref(property.items)], 'properties')
         then
           handleObject(
             name,

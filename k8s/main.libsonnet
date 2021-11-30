@@ -5,10 +5,10 @@ std.foldl(
   function(acc, m)
     local items = std.reverse(std.split(m, '.'));
     if (
-         std.startsWith(m, 'io.k8s.api.')
-         || std.startsWith(m, 'io.k8s.kube-aggregator.pkg.apis.')
-         || std.startsWith(m, 'io.k8s.apiextensions-apiserver.pkg.apis.')
-       )
+      std.startsWith(m, 'io.k8s.api.')
+      || std.startsWith(m, 'io.k8s.kube-aggregator.pkg.apis.')
+      || std.startsWith(m, 'io.k8s.apiextensions-apiserver.pkg.apis.')
+    )
     then
       acc + gen.fromSchema(
         items[2],
