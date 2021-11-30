@@ -17,32 +17,47 @@ local k8s = import 'kubernetes-spec/swagger.json';
     then error 'multiple versions match %s in definition' % [version, definition.metadata.name]
     else versions[0],
 
+  local nestInParents(name, parents, object) =
+    std.foldr(
+      function(p, acc)
+        if p == name
+        then acc
+        else { [p]+: acc }
+      ,
+      parents,
+      object
+    ),
+
+  local functionName(name) =
+    'with' + std.asciiUpper(name[0]) + name[1:],
+
   local createFunction(name, parents) =
     {
-      ['with' + std.asciiUpper(name[0]) + name[1:]](value):
-        std.foldr(
-          function(p, acc)
-            if p == name
-            then acc
-            else { [p]+: acc }
-          ,
+      [functionName(name)](value):
+        nestInParents(name, parents, { [name]: value }),
+    },
+
+  local handleArray(name, parents) =
+    {
+      [functionName(name)](value):
+        nestInParents(
+          name,
           parents,
-          { [name]: value }
+          { [name]: if std.isArray(value) then value else [value] }
+        ),
+
+      [functionName(name) + 'Mixin'](value):
+        nestInParents(
+          name,
+          parents,
+          { [name]+: if std.isArray(value) then value else [value] }
         ),
     },
 
-  local appendFunction(name, parents) =
+  local mixinFunction(name, parents) =
     {
-      ['with' + std.asciiUpper(name[0]) + name[1:] + 'Mixin'](value):
-        std.foldr(
-          function(p, acc)
-            if p == name
-            then acc
-            else { [p]+: acc }
-          ,
-          parents,
-          { [name]+: [value] }
-        ),
+      [functionName(name) + 'Mixin'](value):
+        nestInParents(name, parents, { [name]+: value }),
     },
 
   local handleObject(name, parents, properties, siblings={}) =
@@ -89,7 +104,7 @@ local k8s = import 'kubernetes-spec/swagger.json';
     createFunction(name, parents)
     + (
       if type == 'array'
-      then appendFunction(name, parents)
+      then handleArray(name, parents)
 
       else if type == 'ref' && siblings != {}
       then
@@ -101,6 +116,15 @@ local k8s = import 'kubernetes-spec/swagger.json';
         )
 
       else if type == 'object'
+              && std.objectHas(property, 'properties')
+      then handleObject(
+        name,
+        parents,
+        property.properties,
+        siblings,
+      )
+
+      else if type == 'object'
               && name == 'metadata'
       then handleObject(
         name,
@@ -110,13 +134,7 @@ local k8s = import 'kubernetes-spec/swagger.json';
       )
 
       else if type == 'object'
-              && std.objectHas(property, 'properties')
-      then handleObject(
-        name,
-        parents,
-        property.properties,
-        siblings,
-      )
+      then mixinFunction(name, parents)
 
       else {}
     ) + (
@@ -171,29 +189,29 @@ local k8s = import 'kubernetes-spec/swagger.json';
                {}
              )
            else {})
-          +
-          if std.objectHas(schema, 'x-kubernetes-group-version-kind')
-          then {
-            new(name):
-              local gvk = schema['x-kubernetes-group-version-kind'];
-              local gv =
-                if gvk[0].group == ''
-                then gvk[0].version
-                else gvk[0].group + '/' + gvk.version;
+          + { mixin: self }
+          + (if std.objectHas(schema, 'x-kubernetes-group-version-kind')
+             then {
+               new(name):
+                 local gvk = schema['x-kubernetes-group-version-kind'];
+                 local gv =
+                   if gvk[0].group == ''
+                   then gvk[0].version
+                   else gvk[0].group + '/' + gvk.version;
 
-              self.withApiVersion(gv)
-              + self.withKind(kind)
-              + self.metadata.withName(name),
-          }
-          else if std.objectHas(schema, 'properties')
-                  && std.objectHas(schema.properties, 'kind')
-          then {
-            new(name):
-              self.withApiVersion(group + '/' + version)
-              + self.withKind(kind)
-              + self.metadata.withName(name),
-          }
-          else {},
+                 self.withApiVersion(gv)
+                 + self.withKind(kind)
+                 + self.metadata.withName(name),
+             }
+             else if std.objectHas(schema, 'properties')
+                     && std.objectHas(schema.properties, 'kind')
+             then {
+               new(name):
+                 self.withApiVersion(group + '/' + version)
+                 + self.withKind(kind)
+                 + self.metadata.withName(name),
+             }
+             else {}),
       },
     },
   },
