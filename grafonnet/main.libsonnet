@@ -9,11 +9,9 @@ std.foldl(
       then ['Dashboard']
       else s;
 
-    acc + gen.fromSchema(
-      'dashboard',
-      'dashboard',
-      '0',
-      items[0],
+    acc + gen.parse(
+      gen.camelCaseKind(items[0]),
+      [],
       spec.components.schemas[m],
       spec.components.schemas,
     ),
