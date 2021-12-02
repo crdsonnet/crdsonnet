@@ -23,3 +23,12 @@ std.foldl(
   std.objectFields(swagger.definitions),
   {}
 )
+
++ (import 'k8s-libsonnet-custom/list.libsonnet')
++ (import 'k8s-libsonnet-custom/mapContainers.libsonnet')
++ (import 'k8s-libsonnet-custom/autoscaling.libsonnet')
++ (import 'k8s-libsonnet-custom/apps.libsonnet')
++ (import 'k8s-libsonnet-custom/core.libsonnet')
++ (import 'k8s-libsonnet-custom/batch.libsonnet')
++ (import 'k8s-libsonnet-custom/volumeMounts.libsonnet')
++ (import 'k8s-libsonnet-custom/rbac.libsonnet')

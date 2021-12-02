@@ -7,6 +7,6 @@ local k = import './main.libsonnet';
        + k.core.v1.pod.spec.withContainers(
          [self.container]
        ),
-  deployment: k.apps.v1.deployment.new('myDeployment')
+  deployment: k.apps.v1.deployment.new('myDeployment', containers=[self.container])
               + k.apps.v1.deployment.spec.withPaused('false'),
 }
