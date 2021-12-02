@@ -1,3 +1,4 @@
+// vim: fdm=indent
 local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
 local k8s = import 'kubernetes-spec/swagger.json';
 
@@ -228,7 +229,7 @@ local k8s = import 'kubernetes-spec/swagger.json';
     local s = xtd.camelcase.split(kind);
     std.asciiLower(s[0]) + std.join('', s[1:]),
 
-  fromSchema(grouping, group, version, kind, schema, refs={}, withMixin=false):
+  fromSchema(grouping, group, version, kind, schema, refs={}, withMixin=false)::
     {
       local kindname = this.camelCaseKind(kind),
 
@@ -264,7 +265,7 @@ local k8s = import 'kubernetes-spec/swagger.json';
       },
     },
 
-  fromCRD(definition, group_suffix):
+  fromCRD(definition, group_suffix)::
     local grouping =
       // If no dedicated API group, then use nogroup key for consistency
       if group_suffix == definition.spec.group
@@ -301,7 +302,7 @@ local k8s = import 'kubernetes-spec/swagger.json';
     ),
 
   // limit recursion depth with maxDepth
-  inspect(fields, maxDepth=10, depth=0):
+  inspect(fields, maxDepth=10, depth=0)::
     std.foldl(
       function(acc, p)
         acc + (
