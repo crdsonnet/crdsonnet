@@ -15,27 +15,37 @@ jb install https://github.com/Duologic/crdsonnet/crdsonnet
 
 ```jsonnet
 local gen = import 'github.com/Duologic/crdsonnet/crdsonnet/main.libsonnet';
-local example = gen.fromDefinition(someCustomResourceDefinition, 'example.io');
+local example = gen.fromCRD(someCustomResourceDefinition, 'example.io');
 
 {
   example_object: example.core.v1.someObject.new(name='example'),
-  inspect: gen.inspect(example),
+}
+```
+
+### Debug
+
+Use the `inspect` function to view the rendered tree and turn the `debug` option on to see
+debug messages:
+
+```
+local gen =
+  (import 'github.com/Duologic/crdsonnet/crdsonnet/main.libsonnet')
+  + { debug: true };
+
+local example = gen.fromCRD(someCustomResourceDefinition, 'example.io');
+
+{
+  inspect: gen.inspect(example, maxDepth=10),
 }
 ```
 
 ## Demo
 
-The demo outputs a JSON represetation of the runtime library using the `gen.inspect()`
-function, try it:
+The demos output a JSON represetation of the runtime library using the `inspect` function,
+try it:
 
 ```
-cd cert-manager
-jb install
-jsonnet -J vendor inspect.libsonnet
-```
-
-```
-cd k8s
+cd <cert-manager|k8s|grafonnet>
 jb install
 jsonnet -J vendor inspect.libsonnet
 ```
@@ -47,6 +57,3 @@ cd crossplane
 jb install
 tk eval crossplane/inspect.libsonnet
 ```
-
-## Debug
-

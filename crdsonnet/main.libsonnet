@@ -4,7 +4,12 @@ local k8s = import 'kubernetes-spec/swagger.json';
 
 {
   local this = self,
-  local debug = false,
+  debug:: false,
+
+  local infoMessage(message, return) =
+    if this.debug
+    then std.trace('INFO: ' + message, return)
+    else return,
 
   nestInParents(name, parents, object)::
     std.foldr(
@@ -31,12 +36,6 @@ local k8s = import 'kubernetes-spec/swagger.json';
       [this.functionName(name) + 'Mixin'](value):
         this.nestInParents(name, parents, { [name]+: value }),
     },
-
-  local infoMessage(message, return) =
-    if debug
-    then std.trace('INFO: ' + message, return)
-    else return,
-
 
   handleObject(name, parents, object, refs={})::
     (
