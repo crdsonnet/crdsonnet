@@ -5,18 +5,6 @@ local k8s = import 'kubernetes-spec/swagger.json';
   local this = self,
   local debug = false,
 
-  local getVersionInDefinition(definition, version) =
-    local versions = [
-      v
-      for v in definition.spec.versions
-      if v.name == version
-    ];
-    if std.length(versions) == 0
-    then error 'version %s in definition %s not found' % [version, definition.metadata.name]
-    else if std.length(versions) > 1
-    then error 'multiple versions match %s in definition' % [version, definition.metadata.name]
-    else versions[0],
-
   local nestInParents(name, parents, object) =
     std.foldr(
       function(p, acc)
@@ -31,14 +19,90 @@ local k8s = import 'kubernetes-spec/swagger.json';
   local functionName(name) =
     'with' + std.asciiUpper(name[0]) + name[1:],
 
-  local createFunction(name, parents) =
+  local withFunction(name, parents) =
     {
       [functionName(name)](value):
         nestInParents(name, parents, { [name]: value }),
     },
 
-  local handleArray(name, parents) =
+  local mixinFunction(name, parents) =
     {
+      [functionName(name) + 'Mixin'](value):
+        nestInParents(name, parents, { [name]+: value }),
+    },
+
+  local ref(object) =
+    std.reverse(std.split(object['$ref'], '/'))[0],
+
+  local infoMessage(message, return) =
+    if debug
+    then std.trace('INFO: ' + message, return)
+    else return,
+
+
+  local handleObject(name, parents, object, refs={}) =
+    (
+      if parents != []
+      then withFunction(name, parents)
+           + mixinFunction(name, parents)
+      else {}
+    )
+    + (
+      if std.objectHas(object, 'properties')
+      then { [name]+: handleProperties(name, parents, object.properties, refs) }
+      else {}
+    )
+    + (
+      if std.objectHas(object, 'items')
+      then { [name]+: this.propertyToValue(name, parents, object.items, refs) }
+      else {}
+    )
+    + (
+      if std.objectHas(object, 'allOf')
+         || std.objectHas(object, 'oneOf')
+         || std.objectHas(object, 'anyOf')
+      then handleComposite(name, parents, object, refs)
+      else {}
+    )
+    + (
+      if !std.objectHas(object, 'properties')
+         && !std.objectHas(object, 'items')
+         && !std.objectHas(object, 'allOf')
+         && !std.objectHas(object, 'oneOf')
+         && !std.objectHas(object, 'anyOf')
+      then
+        if name == 'metadata'
+        then {
+          [name]+: handleProperties(
+            name,
+            parents,
+            k8s.definitions['io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta'].properties,
+            refs,
+          ),
+        }
+        else if parents == []
+        then {
+          [name]+: withFunction(name, parents)
+                   + mixinFunction(name, parents),
+        }
+        else {}
+      else {}
+    ),
+
+  local handleArray(name, parents, array, refs={}) =
+    (
+      if std.objectHas(array, 'items')
+      then { [name]+: this.propertyToValue(name, parents, array.items, refs) }
+      else {}
+    )
+    + (
+      if std.objectHas(array, 'allOf')
+         || std.objectHas(array, 'oneOf')
+         || std.objectHas(array, 'anyOf')
+      then { [name]+: handleComposite(name, parents, array, refs) }
+      else {}
+    )
+    + {
       [functionName(name)](value):
         nestInParents(
           name,
@@ -54,168 +118,150 @@ local k8s = import 'kubernetes-spec/swagger.json';
         ),
     },
 
-  local mixinFunction(name, parents) =
-    {
-      [functionName(name) + 'Mixin'](value):
-        nestInParents(name, parents, { [name]+: value }),
-    },
+  local handleOther(name, parents) =
+    withFunction(name, parents),
 
-  local handleObject(name, parents, properties, siblings={}) =
+  local handleComposite(name, parents, object, refs={}) =
+    local handle(composite) = std.foldl(
+      function(acc, c)
+        local n =
+          local s = xtd.camelcase.split(ref(c));
+          std.asciiLower(s[0]) + std.join('', s[1:]);
+        if std.objectHas(c, '$ref')
+        then acc {
+          [n]+:
+            this.propertyToValue(
+              name,
+              parents,
+              refs[ref(c)],
+              refs,
+            ),
+        }
+        else acc,
+      composite,
+      {}
+    );
+    (
+      if std.objectHas(object, 'allOf')
+      then handle(object.allOf)
+      else {}
+    )
+    + (
+      if std.objectHas(object, 'oneOf')
+      then handle(object.oneOf)
+      else {}
+    )
+    + (
+      if std.objectHas(object, 'anyOf')
+      then handle(object.anyOf)
+      else {}
+    ),
+
+  local handleRef(name, parents, ref, refs={}) =
+    if refs != {}
+    then this.propertyToValue(name, parents, refs[ref], refs)
+    else {}
+  ,
+
+  local handleProperties(name, parents, properties, refs={}) =
     std.foldl(
       function(acc, p)
-        acc {
-          [name]+: this.propertyToValue(
-            p,
-            parents + [p],
-            properties[p],
-            siblings,
-          ),
-        },
+        acc + this.propertyToValue(
+          p,
+          parents + [p],
+          properties[p],
+          refs,
+        ),
       std.objectFields(properties),
       {}
     ),
 
-  propertyToValue(name, parents, property, siblings={}):
-    local infoMessage(message, return) =
-      if debug
-      then std.trace('INFO: ' + message, return)
-      else return;
-
-    local ref(property) =
-      std.reverse(std.split(property['$ref'], '/'))[0];
-
+  propertyToValue(name, parents, property, refs={}):
     local type =
       if std.objectHas(property, 'type')
       then property.type
 
-      // TODO: figure out how to handle allOf, oneOf or anyOf properly,
-      // would we expect 'array' or 'object' here?
       else if std.objectHas(property, 'allOf')
               || std.objectHas(property, 'oneOf')
               || std.objectHas(property, 'anyOf')
-      then 'xOf'
+      then 'composite'
 
       else if std.objectHas(property, '$ref')
       then 'ref'
 
-      else infoMessage("can't find type for " + std.join('.', parents), '')
+      else infoMessage(
+        'Unsupported property %s with fields %s' % [
+          std.join('.', parents),
+          std.toString(std.objectFields(property)),
+        ],
+        ''
+      )
     ;
 
-    createFunction(name, parents)
-    + (
-      if type == 'array'
-      then handleArray(name, parents)
+    (
+      if type == 'object'
+      then handleObject(name, parents, property, refs)
 
-      else if type == 'ref' && siblings != {}
-      then
-        this.propertyToValue(
-          name,
-          parents,
-          siblings[ref(property)],
-          siblings,
-        )
+      else if type == 'array'
+      then handleArray(name, parents, property, refs)
 
-      else if type == 'object'
-              && std.objectHas(property, 'properties')
-      then handleObject(
-        name,
-        parents,
-        property.properties,
-        siblings,
-      )
+      else if type == 'ref'
+      then handleRef(name, parents, ref(property), refs)
 
-      else if type == 'object'
-              && name == 'metadata'
-      then handleObject(
-        name,
-        parents,
-        k8s.definitions['io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta'].properties,
-        siblings,
-      )
+      else if type == 'composite'
+      then handleComposite(name, parents, property, refs)
 
-      else if type == 'object'
-      then mixinFunction(name, parents)
-
-      else {}
-    ) + (
-      if std.objectHas(property, 'items')
-      then (
-        if std.objectHas(property.items, 'type')
-           && std.member(['array', 'object'], property.items.type)
-        then handleObject(
-          name,
-          parents,
-          property.items.properties,
-          siblings,
-        )
-
-        else if std.objectHas(property.items, '$ref') && siblings != {}
-                && std.objectHas(siblings[ref(property.items)], 'properties')
-        then
-          handleObject(
-            name,
-            parents,
-            siblings[ref(property.items)].properties,
-            siblings,
-          )
-
-        else if !std.objectHas(property.items, 'type')
-                && std.objectHas(property.items, '$ref')
-        then infoMessage("can't find type or ref for items in " + std.join('.', parents), {})
-
-        else {}
-      )
-      else {}
+      else handleOther(name, parents)
     ),
 
-  fromSchema(grouping, group, version, kind, schema, siblings={}): {
+  fromSchema(grouping, group, version, kind, schema, refs={}, withMixin=false): {
     local kindname =
       local s = xtd.camelcase.split(kind);
       std.asciiLower(s[0]) + std.join('', s[1:]),
 
     [grouping]+: {
-      [version]+: {
-        [kindname]:
-          (if std.objectHas(schema, 'properties')
-           then
-             std.foldl(
-               function(acc, p)
-                 acc + this.propertyToValue(
-                   p,
-                   [p],
-                   schema.properties[p],
-                   siblings,
-                 ),
-               std.objectFields(schema.properties),
-               {}
-             )
-           else {})
-          + { mixin: self }
-          + (if std.objectHas(schema, 'x-kubernetes-group-version-kind')
-             then {
-               new(name):
-                 local gvk = schema['x-kubernetes-group-version-kind'];
-                 local gv =
-                   if gvk[0].group == ''
-                   then gvk[0].version
-                   else gvk[0].group + '/' + gvk.version;
+      [version]+:
+        this.propertyToValue(kindname, [], schema, refs)
+        + {
+          [kindname]+:
+            (if withMixin then { mixin: self } else {})
+            + (if std.objectHas(schema, 'x-kubernetes-group-version-kind')
+               then {
+                 new(name):
+                   local gvk = schema['x-kubernetes-group-version-kind'];
+                   local gv =
+                     if gvk[0].group == ''
+                     then gvk[0].version
+                     else gvk[0].group + '/' + gvk.version;
 
-                 self.withApiVersion(gv)
-                 + self.withKind(kind)
-                 + self.metadata.withName(name),
-             }
-             else if std.objectHas(schema, 'properties')
-                     && std.objectHas(schema.properties, 'kind')
-             then {
-               new(name):
-                 self.withApiVersion(group + '/' + version)
-                 + self.withKind(kind)
-                 + self.metadata.withName(name),
-             }
-             else {}),
-      },
+                   self.withApiVersion(gv)
+                   + self.withKind(kind)
+                   + self.metadata.withName(name),
+               }
+               else if std.objectHas(schema, 'properties')
+                       && std.objectHas(schema.properties, 'kind')
+               then {
+                 new(name):
+                   self.withApiVersion(group + '/' + version)
+                   + self.withKind(kind)
+                   + self.metadata.withName(name),
+               }
+               else {}),
+        },
     },
   },
+
+  local getVersionInDefinition(definition, version) =
+    local versions = [
+      v
+      for v in definition.spec.versions
+      if v.name == version
+    ];
+    if std.length(versions) == 0
+    then error 'version %s in definition %s not found' % [version, definition.metadata.name]
+    else if std.length(versions) > 1
+    then error 'multiple versions match %s in definition' % [version, definition.metadata.name]
+    else versions[0],
 
   fromCRD(definition, group_suffix):
     local grouping =

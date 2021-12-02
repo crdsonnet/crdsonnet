@@ -11,12 +11,13 @@ std.foldl(
     )
     then
       acc + gen.fromSchema(
-        items[2],
-        items[2],
-        items[1],
-        items[0],
-        swagger.definitions[m],
-        swagger.definitions,
+        grouping=items[2],
+        group=items[2],
+        version=items[1],
+        kind=items[0],
+        schema=swagger.definitions[m],
+        refs=swagger.definitions,
+        withMixin=true,
       )
     else acc,
   std.objectFields(swagger.definitions),
