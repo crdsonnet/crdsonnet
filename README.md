@@ -27,7 +27,7 @@ local example = gen.fromCRD(someCustomResourceDefinition, 'example.io');
 Use the `inspect` function to view the rendered tree and turn the `debug` option on to see
 debug messages:
 
-```
+```jsonnet
 local gen =
   (import 'github.com/Duologic/crdsonnet/crdsonnet/main.libsonnet')
   + { debug: true };
