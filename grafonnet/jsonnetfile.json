@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "dependencies": [
+    {
+      "source": {
+        "git": {
+          "remote": "https://github.com/Duologic/crdsonnet.git",
+          "subdir": "crdsonnet"
+        }
+      },
+      "version": "master"
+    },
+    {
+      "source": {
+        "git": {
+          "remote": "https://github.com/Duologic/grafana-spec.git",
+          "subdir": "spec"
+        }
+      },
+      "version": "master",
+      "name": "grafana-spec"
+    }
+  ],
+  "legacyImports": true
+}
