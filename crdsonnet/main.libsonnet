@@ -123,7 +123,7 @@ local k8s = import 'kubernetes-spec/swagger.json';
   handleComposite(name, parents, object, refs={})::
     local handle(composite) = std.foldl(
       function(acc, c)
-        local v = this.parse(
+        local parsed = this.parse(
           name,
           parents,
           c,
@@ -132,17 +132,17 @@ local k8s = import 'kubernetes-spec/swagger.json';
         acc + (
           if std.objectHas(c, '$ref')
           then {
-            local n =
+            local refname =
               local s = xtd.camelcase.split(this.getRefName(c));
               std.asciiLower(s[0]) + std.join('', s[1:]),
             // Expose composite types in a nested `types` field
             [name]+: {
               types+: {
-                [n]+: v,
+                [refname]+: parsed,
               },
             },
           }
-          else v
+          else parsed
         ),
       composite,
       {}
