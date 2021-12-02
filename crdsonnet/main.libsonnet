@@ -31,9 +31,6 @@ local k8s = import 'kubernetes-spec/swagger.json';
         nestInParents(name, parents, { [name]+: value }),
     },
 
-  local ref(object) =
-    std.reverse(std.split(object['$ref'], '/'))[0],
-
   local infoMessage(message, return) =
     if debug
     then std.trace('INFO: ' + message, return)
@@ -92,7 +89,7 @@ local k8s = import 'kubernetes-spec/swagger.json';
   local handleArray(name, parents, array, refs={}) =
     (
       if std.objectHas(array, 'items')
-      then { [name]+: this.propertyToValue(name, parents, array.items, refs) }
+      then this.propertyToValue(name, parents, array.items, refs)
       else {}
     )
     + (
@@ -119,25 +116,34 @@ local k8s = import 'kubernetes-spec/swagger.json';
     },
 
   local handleOther(name, parents) =
-    withFunction(name, parents),
+    if parents == []
+    then { [name]+: withFunction(name, parents) }
+    else withFunction(name, parents),
 
   local handleComposite(name, parents, object, refs={}) =
     local handle(composite) = std.foldl(
       function(acc, c)
-        local n =
-          local s = xtd.camelcase.split(ref(c));
-          std.asciiLower(s[0]) + std.join('', s[1:]);
-        if std.objectHas(c, '$ref')
-        then acc {
-          [n]+:
-            this.propertyToValue(
-              name,
-              parents,
-              refs[ref(c)],
-              refs,
-            ),
-        }
-        else acc,
+        local v = this.propertyToValue(
+          name,
+          parents,
+          c,
+          refs,
+        );
+        acc + (
+          if std.objectHas(c, '$ref')
+          then {
+            local n =
+              local s = xtd.camelcase.split(getRefName(c));
+              std.asciiLower(s[0]) + std.join('', s[1:]),
+            // Expose composite types in a nested `types` field
+            [name]+: {
+              types+: {
+                [n]+: v,
+              },
+            },
+          }
+          else v
+        ),
       composite,
       {}
     );
@@ -157,10 +163,14 @@ local k8s = import 'kubernetes-spec/swagger.json';
       else {}
     ),
 
-  local handleRef(name, parents, ref, refs={}) =
-    if refs != {}
+  local getRefName(object) =
+    std.reverse(std.split(object['$ref'], '/'))[0],
+
+  local handleRef(name, parents, object, refs={}) =
+    local ref = getRefName(object);
+    if refs != {} && std.objectHas(refs, ref)
     then this.propertyToValue(name, parents, refs[ref], refs)
-    else {}
+    else handleOther(name, parents)
   ,
 
   local handleProperties(name, parents, properties, refs={}) =
@@ -206,7 +216,7 @@ local k8s = import 'kubernetes-spec/swagger.json';
       then handleArray(name, parents, property, refs)
 
       else if type == 'ref'
-      then handleRef(name, parents, ref(property), refs)
+      then handleRef(name, parents, property, refs)
 
       else if type == 'composite'
       then handleComposite(name, parents, property, refs)
