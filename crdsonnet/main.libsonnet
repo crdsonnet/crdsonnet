@@ -245,7 +245,7 @@ local k8s = import 'kubernetes-spec/swagger.json';
                      local gv =
                        if gvk[0].group == ''
                        then gvk[0].version
-                       else gvk[0].group + '/' + gvk.version;
+                       else gvk[0].group + '/' + gvk[0].version;
 
                      self.withApiVersion(gv)
                      + self.withKind(kind)
