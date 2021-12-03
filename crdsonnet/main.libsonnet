@@ -232,7 +232,7 @@ local k8s = import 'kubernetes-spec/swagger.json';
     {
       local kindname = this.camelCaseKind(kind),
 
-      [grouping]+: {
+      [grouping]+:: {
         [version]+:
           this.parse(kindname, [], schema, refs)
           + {
