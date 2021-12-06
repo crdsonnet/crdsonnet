@@ -77,12 +77,7 @@ local k8s = import 'kubernetes-spec/swagger.json';
             refs,
           ),
         }
-        else if parents == []
-        then {
-          [name]+: this.withFunction(name, parents)
-                   + this.mixinFunction(name, parents),
-        }
-        else {}
+        else this.handleOther(name, parents, object)
       else {}
     ),
 
@@ -115,9 +110,12 @@ local k8s = import 'kubernetes-spec/swagger.json';
         ),
     },
 
-  handleOther(name, parents)::
-    if parents == []
-    then { [name]+: this.withFunction(name, parents) }
+  handleOther(name, parents, object)::
+    if std.objectHas(object, 'type') && parents == []
+    then
+      // Provide constructor for simple root schemas
+      local typename = std.asciiUpper(object.type[0]) + object.type[1:];
+      { [name]+: { [this.camelCaseKind('new' + typename)](value): value } }
     else this.withFunction(name, parents),
 
   handleComposite(name, parents, object, refs={})::
@@ -131,17 +129,16 @@ local k8s = import 'kubernetes-spec/swagger.json';
         );
         acc + (
           if std.objectHas(c, '$ref')
-          then {
-            local refname =
-              local s = xtd.camelcase.split(this.getRefName(c));
-              std.asciiLower(s[0]) + std.join('', s[1:]),
-            // Expose composite types in a nested `types` field
-            [name]+: {
-              types+: {
-                [refname]+: parsed,
+          then
+            local refname = this.camelCaseKind(this.getRefName(c));
+            {
+              // Expose composite types in a nested `types` field
+              [name]+: {
+                types+: {
+                  [refname]+: parsed,
+                },
               },
-            },
-          }
+            }
           else parsed
         ),
       composite,
@@ -170,7 +167,7 @@ local k8s = import 'kubernetes-spec/swagger.json';
     local ref = this.getRefName(object);
     if refs != {} && std.objectHas(refs, ref)
     then this.parse(name, parents, refs[ref], refs)
-    else this.handleOther(name, parents)
+    else this.handleOther(name, parents, object)
   ,
 
   handleProperties(name, parents, properties, refs={})::
@@ -221,7 +218,7 @@ local k8s = import 'kubernetes-spec/swagger.json';
       else if type == 'composite'
       then this.handleComposite(name, parents, property, refs)
 
-      else this.handleOther(name, parents)
+      else this.handleOther(name, parents, property)
     ),
 
   camelCaseKind(kind)::
