@@ -33,14 +33,14 @@ std.foldl(
     fieldConfig+: {
       overrides+: {
         new(id, options, properties=[]):
-          super.fieldConfig.overrides.matcher.withId(id)
-          + super.fieldConfig.overrides.matcher.withOptions(options)
-          + super.fieldConfig.overrides.withProperties(properties),
+          super.matcher.withId(id)
+          + super.matcher.withOptions(options)
+          + super.withProperties(properties),
 
         addProperty(id, value):
-          super.fieldConfig.overrides.withPropertiesMixin([
-            super.fieldConfig.overrides.properties.withId(id)
-            + super.fieldConfig.overrides.properties.withValue(value),
+          super.withPropertiesMixin([
+            super.properties.withId(id)
+            + super.properties.withValue(value),
           ]),
       },
     },
