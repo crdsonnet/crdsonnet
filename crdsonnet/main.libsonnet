@@ -84,7 +84,7 @@ local k8s = import 'kubernetes-spec/swagger.json';
   handleArray(name, parents, array, refs={})::
     (
       if std.objectHas(array, 'items')
-      then this.parse(name, parents, array.items, refs)
+      then this.parse(name, [], array.items, refs)
       else {}
     )
     + (
