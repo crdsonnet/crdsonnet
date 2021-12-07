@@ -296,25 +296,4 @@ local k8s = import 'kubernetes-spec/swagger.json';
       ],
       {}
     ),
-
-  // limit recursion depth with maxDepth
-  inspect(fields, maxDepth=10, depth=0)::
-    std.foldl(
-      function(acc, p)
-        acc + (
-          if std.isObject(fields[p])
-             && depth != maxDepth
-          then { [p]+:
-            this.inspect(
-              fields[p],
-              maxDepth,
-              depth + 1
-            ) }
-          else if std.isFunction(fields[p])
-          then { functions+: [p] }
-          else { fields+: [p] }
-        ),
-      std.objectFields(fields),
-      {}
-    ),
 }

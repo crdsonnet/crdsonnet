@@ -1,3 +1,3 @@
-local gen = import 'github.com/Duologic/crdsonnet/crdsonnet/main.libsonnet';
+local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
 
-gen.inspect(import './main.libsonnet', 4)
+xtd.inspect.inspect(import './main.libsonnet', 4)

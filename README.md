@@ -24,25 +24,25 @@ local example = gen.fromCRD(someCustomResourceDefinition, 'example.io');
 
 ### Debug
 
-Use the `inspect` function to view the rendered tree and turn the `debug` option on to see
-debug messages:
+Use the `xtd.inspect` package to view the rendered tree and turn the `debug` option on to
+see debug messages:
 
 ```jsonnet
 local gen =
   (import 'github.com/Duologic/crdsonnet/crdsonnet/main.libsonnet')
   + { debug: true };
 
+local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
+
 local example = gen.fromCRD(someCustomResourceDefinition, 'example.io');
 
-{
-  inspect: gen.inspect(example, maxDepth=10),
-}
+xtd.inspect.inspect(example, 10)
 ```
 
 ## Demo
 
-The demos output a JSON represetation of the runtime library using the `inspect` function,
-try it:
+The demos output a JSON represetation of the runtime library using the `xtd.inspect`
+package, try it:
 
 ```
 cd <cert-manager|k8s|grafonnet>
