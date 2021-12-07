@@ -14,8 +14,8 @@ jb install https://github.com/Duologic/crdsonnet/crdsonnet
 ## Usage
 
 ```jsonnet
-local gen = import 'github.com/Duologic/crdsonnet/crdsonnet/main.libsonnet';
-local example = gen.fromCRD(someCustomResourceDefinition, 'example.io');
+local crdsonnet = import 'github.com/Duologic/crdsonnet/crdsonnet/main.libsonnet';
+local example = crdsonnet.fromCRD(someCustomResourceDefinition, 'example.io');
 
 {
   example_object: example.core.v1.someObject.new(name='example'),
@@ -28,13 +28,13 @@ Use the `xtd.inspect` package to view the rendered tree and turn the `debug` opt
 see debug messages:
 
 ```jsonnet
-local gen =
+local crdsonnet =
   (import 'github.com/Duologic/crdsonnet/crdsonnet/main.libsonnet')
   + { debug: true };
 
 local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
 
-local example = gen.fromCRD(someCustomResourceDefinition, 'example.io');
+local example = crdsonnet.fromCRD(someCustomResourceDefinition, 'example.io');
 
 xtd.inspect.inspect(example, 10)
 ```

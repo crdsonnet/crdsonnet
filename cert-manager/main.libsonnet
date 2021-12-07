@@ -1,4 +1,4 @@
-local gen = import 'github.com/Duologic/crdsonnet/crdsonnet/main.libsonnet';
+local crdsonnet = import 'github.com/Duologic/crdsonnet/crdsonnet/main.libsonnet';
 
 local parseYaml(str) =
   if std.native('parseYaml') != null
@@ -27,7 +27,7 @@ std.foldl(
   function(acc, manifest)
     acc +
     if manifest.kind == 'CustomResourceDefinition'
-    then gen.fromCRD(manifest, 'cert-manager.io')
+    then crdsonnet.fromCRD(manifest, 'cert-manager.io')
     else {},
   manifests,
   {}

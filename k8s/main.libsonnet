@@ -1,4 +1,4 @@
-local gen = import 'github.com/Duologic/crdsonnet/crdsonnet/main.libsonnet';
+local crdsonnet = import 'github.com/Duologic/crdsonnet/crdsonnet/main.libsonnet';
 local swagger = import 'kubernetes-spec/swagger.json';
 
 std.foldl(
@@ -10,7 +10,7 @@ std.foldl(
       || std.startsWith(m, 'io.k8s.apiextensions-apiserver.pkg.apis.')
     )
     then
-      acc + gen.fromSchema(
+      acc + crdsonnet.fromSchema(
         grouping=items[2],
         group=items[2],
         version=items[1],

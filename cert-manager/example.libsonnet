@@ -1,4 +1,4 @@
-local gen = import 'github.com/Duologic/crdsonnet/crdsonnet/main.libsonnet';
+local crdsonnet = import 'github.com/Duologic/crdsonnet/crdsonnet/main.libsonnet';
 
 local cert_manager = import './main.libsonnet';
 

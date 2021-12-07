@@ -1,4 +1,4 @@
-local gen = import 'github.com/Duologic/crdsonnet/crdsonnet/main.libsonnet';
+local crdsonnet = import 'github.com/Duologic/crdsonnet/crdsonnet/main.libsonnet';
 local spec = import 'grafana-spec/dashboard.json';
 
 std.foldl(
@@ -9,8 +9,8 @@ std.foldl(
       then ['Dashboard']
       else s;
 
-    acc + gen.parse(
-      gen.camelCaseKind(items[0]),
+    acc + crdsonnet.parse(
+      crdsonnet.camelCaseKind(items[0]),
       [],
       spec.components.schemas[m],
       spec.components.schemas,
