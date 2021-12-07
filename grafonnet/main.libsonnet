@@ -19,6 +19,14 @@ std.foldl(
   {}
 )
 + {
+
+  dashboard+: {
+    withTemplates(templates):
+      super.templating.withList(templates),
+    withTemplatesMixin(templates):
+      super.templating.withListMixin(templates),
+  },
+
   panel+: {
     new(type, title):
       super.withType(type)
