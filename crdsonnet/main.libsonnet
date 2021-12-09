@@ -5,68 +5,36 @@ local k8s = import 'kubernetes-spec/swagger.json';
 {
   local this = self,
   debug:: false,
-
-  nilvalue:: {},
+  render:: (import './dynamic.libsonnet'),
 
   local infoMessage(message, return) =
     if this.debug
     then std.trace('INFO: ' + message, return)
     else return,
 
-  nestInParents(name, parents, object)::
-    std.foldr(
-      function(p, acc)
-        if p == name
-        then acc
-        else { [p]+: acc }
-      ,
-      parents,
-      object
-    ),
-
-  functionName(name)::
-    'with' + std.asciiUpper(name[0]) + name[1:],
-
-  withFunction(name, parents)::
-    {
-      [this.functionName(name)](value):
-        this.nestInParents(name, parents, { [name]: value }),
-    },
-
-  mixinFunction(name, parents)::
-    {
-      [this.functionName(name) + 'Mixin'](value):
-        this.nestInParents(name, parents, { [name]+: value }),
-    },
-
-  named(name, object)::
-    {
-      [name]+: object,
-    },
-
   handleObject(name, parents, object, refs={})::
     (
       if parents != []
-      then this.withFunction(name, parents)
-           + this.mixinFunction(name, parents)
-      else this.nilvalue
+      then this.render.withFunction(name, parents)
+           + this.render.mixinFunction(name, parents)
+      else this.render.nilvalue
     )
     + (
       if std.objectHas(object, 'properties')
-      then this.named(name, this.handleProperties(name, parents, object.properties, refs))
-      else this.nilvalue
+      then this.render.named(name, this.handleProperties(name, parents, object.properties, refs))
+      else this.render.nilvalue
     )
     + (
       if std.objectHas(object, 'items')
-      then this.named(name, this.parse(name, parents, object.items, refs))
-      else this.nilvalue
+      then this.render.named(name, this.parse(name, parents, object.items, refs))
+      else this.render.nilvalue
     )
     + (
       if std.objectHas(object, 'allOf')
          || std.objectHas(object, 'oneOf')
          || std.objectHas(object, 'anyOf')
       then this.handleComposite(name, parents, object, refs)
-      else this.nilvalue
+      else this.render.nilvalue
     )
     + (
       if !std.objectHas(object, 'properties')
@@ -76,7 +44,7 @@ local k8s = import 'kubernetes-spec/swagger.json';
          && !std.objectHas(object, 'anyOf')
       then
         if name == 'metadata'
-        then this.named(
+        then this.render.named(
           name, this.handleProperties(
             name,
             parents,
@@ -85,67 +53,37 @@ local k8s = import 'kubernetes-spec/swagger.json';
           ),
         )
         else this.handleOther(name, parents, object)
-      else this.nilvalue
+      else this.render.nilvalue
     ),
-
-  arrayFunctions(name, parents)::
-    {
-      [this.functionName(name)](value):
-        this.nestInParents(
-          name,
-          parents,
-          this.named(name, if std.isArray(value) then value else [value])
-        ),
-
-      [this.functionName(name) + 'Mixin'](value):
-        this.nestInParents(
-          name,
-          parents,
-          this.named(name, if std.isArray(value) then value else [value])
-        ),
-    },
 
   handleArray(name, parents, array, refs={})::
     (
       if std.objectHas(array, 'items') && this.getObjectType(array.items) != ''
       then this.parse(name, [], array.items, refs)
-      else this.nilvalue
+      else this.render.nilvalue
     )
     + (
       if std.objectHas(array, 'allOf')
          || std.objectHas(array, 'oneOf')
          || std.objectHas(array, 'anyOf')
-      then this.named(name, this.handleComposite(name, parents, array, refs))
-      else this.nilvalue
+      then this.render.named(name, this.handleComposite(name, parents, array, refs))
+      else this.render.nilvalue
     )
-    + this.arrayFunctions(name, parents),
-
-  otherFunction(name, functionname)::
-    this.named(name, { [functionname](value): value }),
+    + this.render.arrayFunctions(name, parents),
 
   handleOther(name, parents, object)::
     if std.objectHas(object, 'type') && parents == []
     then
       // Provide constructor for simple root schemas
       local typename = std.asciiUpper(object.type[0]) + object.type[1:];
-      this.otherFunction(name, this.camelCaseKind('new' + typename))
+      this.render.otherFunction(name, this.camelCaseKind('new' + typename))
 
     else if !std.member(
       ['object', 'array', 'composite', 'ref'],
       this.getObjectType(object)
     )
-    then this.withFunction(name, parents)
-    else this.nilvalue,
-
-  compositeRef(name, refname, parsed)::
-    {
-      // Expose composite types in a nested `types` field
-      [name]+: {
-        types+: {
-          [refname]+: parsed,
-        },
-      },
-    },
+    then this.render.withFunction(name, parents)
+    else this.render.nilvalue,
 
   handleComposite(name, parents, object, refs={})::
     local handle(composite) = std.foldl(
@@ -162,27 +100,27 @@ local k8s = import 'kubernetes-spec/swagger.json';
             if std.objectHas(c, '$ref')
             then
               local refname = this.camelCaseKind(this.getRefName(c));
-              this.compositeRef(name, refname, parsed[name])
+              this.render.compositeRef(name, refname, parsed[name])
             else parsed
           )
         else acc,
       composite,
-      this.nilvalue
+      this.render.nilvalue
     );
     (
       if std.objectHas(object, 'allOf')
       then handle(object.allOf)
-      else this.nilvalue
+      else this.render.nilvalue
     )
     + (
       if std.objectHas(object, 'oneOf')
       then handle(object.oneOf)
-      else this.nilvalue
+      else this.render.nilvalue
     )
     + (
       if std.objectHas(object, 'anyOf')
       then handle(object.anyOf)
-      else this.nilvalue
+      else this.render.nilvalue
     ),
 
   getRefName(object)::
@@ -196,16 +134,18 @@ local k8s = import 'kubernetes-spec/swagger.json';
   ,
 
   handleProperties(name, parents, properties, refs={})::
-    std.foldl(
-      function(acc, p)
-        acc + this.parse(
-          p,
-          parents + [p],
-          properties[p],
-          refs,
-        ),
-      std.objectFields(properties),
-      this.nilvalue
+    this.render.properties(
+      std.foldl(
+        function(acc, p)
+          acc + this.parse(
+            p,
+            parents + [p],
+            properties[p],
+            refs,
+          ),
+        std.objectFields(properties),
+        this.render.nilvalue
+      )
     ),
 
   getObjectType(object)::
@@ -264,7 +204,7 @@ local k8s = import 'kubernetes-spec/swagger.json';
           this.parse(kindname, [], schema, refs)
           + {
             [kindname]+:
-              (if withMixin then { mixin: self } else this.nilvalue)
+              (if withMixin then { mixin: self } else this.render.nilvalue)
               + (if std.objectHas(schema, 'x-kubernetes-group-version-kind')
                  then {
                    new(name):
@@ -286,7 +226,7 @@ local k8s = import 'kubernetes-spec/swagger.json';
                      + self.withKind(kind)
                      + self.metadata.withName(name),
                  }
-                 else this.nilvalue),
+                 else this.render.nilvalue),
           },
       },
     },

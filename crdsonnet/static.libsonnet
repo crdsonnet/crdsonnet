@@ -1,4 +1,4 @@
-(import './main.libsonnet') {
+{
   local this = self,
 
   nilvalue:: '',
@@ -12,6 +12,9 @@
       parents,
       object
     ),
+
+  functionName(name)::
+    'with' + std.asciiUpper(name[0]) + name[1:],
 
   withFunction(name, parents)::
     |||
@@ -72,6 +75,6 @@
   //  parsed,
   //],
 
-  handleProperties(name, parents, properties, refs={})::
-    '{ %s }' % super.handleProperties(name, parents, properties, refs),
+  properties(object)::
+    '{ %s }' % object,
 }
