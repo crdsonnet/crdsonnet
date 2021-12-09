@@ -22,3 +22,5 @@ std.foldl(
   std.objectFields(spec.components.schemas),
   ''
 )
++
+(importstr 'shortcuts.libsonnet')
