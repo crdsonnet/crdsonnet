@@ -231,24 +231,25 @@ local k8s = import 'kubernetes-spec/swagger.json';
       },
     },
 
+  local getVersionInDefinition(definition, version) =
+    local versions = [
+      v
+      for v in definition.spec.versions
+      if v.name == version
+    ];
+    if std.length(versions) == 0
+    then error 'version %s in definition %s not found' % [version, definition.metadata.name]
+    else if std.length(versions) > 1
+    then error 'multiple versions match %s in definition' % [version, definition.metadata.name]
+    else versions[0],
+
+  // fromCRD accepts a CustomResourceDefinition
   fromCRD(definition, group_suffix)::
     local grouping =
       // If no dedicated API group, then use nogroup key for consistency
       if group_suffix == definition.spec.group
       then 'nogroup'
       else std.split(std.strReplace(definition.spec.group, '.' + group_suffix, ''), '.')[0];
-
-    local getVersionInDefinition(definition, version) =
-      local versions = [
-        v
-        for v in definition.spec.versions
-        if v.name == version
-      ];
-      if std.length(versions) == 0
-      then error 'version %s in definition %s not found' % [version, definition.metadata.name]
-      else if std.length(versions) > 1
-      then error 'multiple versions match %s in definition' % [version, definition.metadata.name]
-      else versions[0];
 
     std.foldl(
       function(acc, v)
@@ -258,6 +259,36 @@ local k8s = import 'kubernetes-spec/swagger.json';
           definition.spec.group,
           v,
           definition.spec.names.kind,
+          getVersionInDefinition(definition, v).schema.openAPIV3Schema,
+        ),
+      [
+        version.name
+        for version in definition.spec.versions
+      ],
+      {}
+    ),
+
+  // fromXRD accepts a Crossplane CompositeResourceDefinition
+  fromXRD(definition, group_suffix)::
+    local kind =
+      if std.objectHas(definition.spec, 'claimNames')
+      then definition.spec.claimNames.kind
+      else definition.spec.names.kind;
+
+    local grouping =
+      // If no dedicated API group, then use nogroup key for consistency
+      if group_suffix == definition.spec.group
+      then 'nogroup'
+      else std.split(std.strReplace(definition.spec.group, '.' + group_suffix, ''), '.')[0];
+
+    std.foldl(
+      function(acc, v)
+        acc
+        + this.fromSchema(
+          grouping,
+          definition.spec.group,
+          v,
+          kind,
           getVersionInDefinition(definition, v).schema.openAPIV3Schema,
         ),
       [
