@@ -1,6 +1,5 @@
 // vim: fdm=indent
 local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
-local k8s = import 'kubernetes-spec/swagger.json';
 
 {
   local this = self,
@@ -44,14 +43,17 @@ local k8s = import 'kubernetes-spec/swagger.json';
          && !std.objectHas(object, 'anyOf')
       then
         if name == 'metadata'
-        then this.render.named(
-          name, this.handleProperties(
-            name,
-            parents,
-            k8s.definitions['io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta'].properties,
-            refs,
-          ),
-        )
+        then
+          // Optional dependency
+          local k8s = import 'kubernetes-spec/swagger.json';
+          this.render.named(
+            name, this.handleProperties(
+              name,
+              parents,
+              k8s.definitions['io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta'].properties,
+              refs,
+            ),
+          )
         else this.handleOther(name, parents, object)
       else this.render.nilvalue
     ),
