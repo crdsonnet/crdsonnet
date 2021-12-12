@@ -44,14 +44,13 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
       then
         if name == 'metadata'
         then
-          // Optional dependency
-          local k8s = import 'kubernetes-spec/swagger.json';
+          local objectmeta = import './objectmeta.json';
           this.render.named(
             name, this.handleProperties(
               name,
               parents,
-              k8s.definitions['io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta'].properties,
-              refs,
+              objectmeta.definitions['io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta'].properties,
+              objectmeta.definitions,
             ),
           )
         else this.handleOther(name, parents, object)

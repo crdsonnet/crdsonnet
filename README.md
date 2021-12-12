@@ -11,34 +11,6 @@ Generate a *runtime* Jsonnet library directly from a OpenAPI spec or CRD.
 jb install https://github.com/Duologic/crdsonnet/crdsonnet
 ```
 
-### Optional dependency
-
-Optionally you can install the Kubernetes swagger spec to fill in the ObjectMeta for CRDs,
-I have not included as a direct dependency as versions may differ and it is very big
-(11MB). 
-
-Add this to your `jsonnetfile.json` or manually create a file on `lib/kubernetes-spec`:
-
-```
-{
-  "version": 1,
-  "dependencies": [
-    ...
-    {
-      "source": {
-        "git": {
-          "remote": "https://github.com/kubernetes/kubernetes.git",
-          "subdir": "api/openapi-spec"
-        }
-      },
-      "version": "release-1.23",
-      "name": "kubernetes-spec"
-    }
-  ],
-  "legacyImports": true
-}
-```
-
 ## Usage
 
 ```jsonnet
