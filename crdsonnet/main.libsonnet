@@ -282,6 +282,49 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
       then 'nogroup'
       else std.split(std.strReplace(definition.spec.group, '.' + group_suffix, ''), '.')[0];
 
+    // These properties are added when Crossplane turns the XRD into a CRD.
+    // This adds them to the library specification for generating the RDs.
+    local XRDProperties = {
+      properties+: {
+        spec+: {
+          properties+: {
+            compositionRef: {
+              properties: { name: { type: 'string' } },
+              required: ['name'],
+              type: 'object',
+            },
+            compositionRevisionRef: {
+              properties: { name: { type: 'string' } },
+              required: ['name'],
+              type: 'object',
+            },
+            compositionSelector: {
+              properties: {
+                matchLabels: {
+                  additionalProperties: { type: 'string' },
+                  type: 'object',
+                },
+              },
+              required: ['matchLabels'],
+              type: 'object',
+            },
+            compositionUpdatePolicy: {
+              enum: [
+                'Automatic',
+                'Manual',
+              ],
+              type: 'string',
+            },
+            writeConnectionSecretToRef: {
+              properties: { name: { type: 'string' } },
+              required: ['name'],
+              type: 'object',
+            },
+          },
+        },
+      },
+    };
+
     std.foldl(
       function(acc, v)
         acc
@@ -290,7 +333,7 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
           definition.spec.group,
           v,
           kind,
-          getVersionInDefinition(definition, v).schema.openAPIV3Schema,
+          getVersionInDefinition(definition, v).schema.openAPIV3Schema + XRDProperties,
         ),
       [
         version.name
