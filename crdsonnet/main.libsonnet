@@ -197,40 +197,38 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
     std.asciiLower(s[0]) + std.join('', s[1:]),
 
   fromSchema(grouping, group, version, kind, schema, refs={}, withMixin=false)::
-    {
-      local kindname = this.camelCaseKind(kind),
+    local kindname = this.camelCaseKind(kind);
 
-      [grouping]+:: {
-        [version]+:
-          this.parse(kindname, [], schema, refs)
-          + {
-            [kindname]+:
-              (if withMixin then { mixin: self } else this.render.nilvalue)
-              + (if std.objectHas(schema, 'x-kubernetes-group-version-kind')
-                 then {
-                   new(name):
-                     local gvk = schema['x-kubernetes-group-version-kind'];
-                     local gv =
-                       if gvk[0].group == ''
-                       then gvk[0].version
-                       else gvk[0].group + '/' + gvk[0].version;
-
-                     self.withApiVersion(gv)
-                     + self.withKind(kind)
-                     + self.metadata.withName(name),
-                 }
-                 else if std.objectHas(schema, 'properties')
-                         && std.objectHas(schema.properties, 'kind')
-                 then {
-                   new(name):
-                     self.withApiVersion(group + '/' + version)
-                     + self.withKind(kind)
-                     + self.metadata.withName(name),
-                 }
-                 else this.render.nilvalue),
-          },
-      },
-    },
+    this.render.fromSchema(
+      grouping,
+      version,
+      this.parse(kindname, [], schema, refs)
+    )
+    + (
+      if withMixin
+      then this.render.withMixin(kindname, [])
+      else this.render.nilvalue
+    )
+    + (if std.objectHas(schema, 'x-kubernetes-group-version-kind')
+       then
+         local gvk = schema['x-kubernetes-group-version-kind'];
+         local gv =
+           if gvk[0].group == ''
+           then gvk[0].version
+           else gvk[0].group + '/' + gvk[0].version;
+         this.render.newFunction(
+           gv,
+           kind,
+           [grouping, version, kindname]
+         )
+       else if std.objectHas(schema, 'properties')
+               && std.objectHas(schema.properties, 'kind')
+       then this.render.newFunction(
+         group + '/' + version,
+         kind,
+         [grouping, version, kindname]
+       )
+       else this.render.nilvalue),
 
   local getVersionInDefinition(definition, version) =
     local versions = [
@@ -266,7 +264,7 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
         version.name
         for version in definition.spec.versions
       ],
-      {}
+      this.render.nilvalue
     ),
 
   // fromXRD accepts a Crossplane CompositeResourceDefinition
@@ -339,6 +337,6 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
         version.name
         for version in definition.spec.versions
       ],
-      {}
+      this.render.nilvalue
     ),
 }

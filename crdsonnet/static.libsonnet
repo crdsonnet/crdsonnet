@@ -8,7 +8,7 @@
       function(p, acc)
         if p == name
         then acc
-        else p + ': { ' + acc + ' }',
+        else p + '+: { ' + acc + ' }',
       parents,
       object
     ),
@@ -77,4 +77,35 @@
 
   properties(object)::
     '{ %s }' % object,
+
+  withMixin(name, parents)::
+    this.nestInParents(
+      name,
+      parents,
+      '{ mixin: self }'
+    ),
+
+  newFunction(apiVersion, kind, parents)::
+    '{\n %s \n}' %
+    this.nestInParents(
+      'new',
+      parents,
+      |||
+        new(name):
+          self.withApiVersion('%(apiVersion)s')
+          + self.withKind('%(kind)s')
+          + self.metadata.withName(name),
+      ||| % {
+        apiVersion: apiVersion,
+        kind: kind,
+      },
+    ),
+
+  fromSchema(grouping, version, parsed)::
+    '{\n %s \n}' %
+    this.nestInParents(
+      '',
+      [grouping, version],
+      parsed,
+    ),
 }

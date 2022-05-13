@@ -66,4 +66,30 @@
 
   properties(object)::
     object,
+
+  withMixin(name, parents)::
+    this.nestInParents(
+      name,
+      parents,
+      { mixin: self },
+    ),
+
+  newFunction(apiVersion, kind, parents)::
+    this.nestInParents(
+      'new',
+      parents,
+      {
+        new(name):
+          self.withApiVersion(apiVersion)
+          + self.withKind(kind)
+          + self.metadata.withName(name),
+      },
+    ),
+
+  fromSchema(grouping, version, parsed)::
+    this.nestInParents(
+      '',
+      [grouping, version],
+      parsed,
+    ),
 }
