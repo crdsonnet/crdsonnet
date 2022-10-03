@@ -24,6 +24,14 @@
       this.nestInParents(name, parents, name + ': value'),
     ],
 
+  withConstant(name, parents, value)::
+    |||
+      %s(): { %s },
+    ||| % [
+      this.functionName(name),
+      this.nestInParents(name, parents, name + ": '" + value + "'"),
+    ],
+
   mixinFunction(name, parents)::
     |||
       %sMixin(value): { %s },

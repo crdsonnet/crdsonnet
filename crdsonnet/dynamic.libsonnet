@@ -23,6 +23,12 @@
         this.nestInParents(name, parents, { [name]: value }),
     },
 
+  withConstant(name, parents, value)::
+    {
+      [this.functionName(name)]():
+        this.nestInParents(name, parents, { [name]: value }),
+    },
+
   mixinFunction(name, parents)::
     {
       [this.functionName(name) + 'Mixin'](value):

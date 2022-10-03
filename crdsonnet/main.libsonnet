@@ -72,6 +72,9 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
     )
     + this.render.arrayFunctions(name, parents),
 
+  handleConstant(name, parents, object)::
+    this.render.withConstant(name, parents, object.const),
+
   handleOther(name, parents, object)::
     if std.objectHas(object, 'type') && parents == []
     then
@@ -161,6 +164,9 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
     else if std.objectHas(object, '$ref')
     then 'ref'
 
+    else if std.objectHas(object, 'const')
+    then 'const'
+
     else '',
 
   parse(name, parents, property, refs={})::
@@ -185,6 +191,9 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
 
       else if type == 'ref'
       then this.handleRef(name, parents, property, refs)
+
+      else if type == 'const'
+      then this.handleConstant(name, parents, property)
 
       else if type == 'composite'
       then this.handleComposite(name, parents, property, refs)
