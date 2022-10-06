@@ -15,7 +15,15 @@
     ),
 
   functionName(name)::
-    'with' + std.asciiUpper(name[0]) + name[1:],
+    local underscores = std.set(std.findSubstr('_', name));
+    local n = std.join('', [
+      if std.setMember(i - 1, underscores)
+      then std.asciiUpper(name[i])
+      else name[i]
+      for i in std.range(0, std.length(name) - 1)
+      if !std.setMember(i, underscores)
+    ]);
+    'with' + std.asciiUpper(n[0]) + n[1:],
 
   withFunction(name, parents)::
     {
