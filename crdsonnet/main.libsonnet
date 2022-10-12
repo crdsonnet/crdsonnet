@@ -102,6 +102,7 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
           );
           acc + (
             if std.objectHas(c, '$ref')
+               && name in parsed
             then
               local refname = this.camelCaseKind(this.getRefName(c));
               this.render.compositeRef(name, refname, parsed[name])
