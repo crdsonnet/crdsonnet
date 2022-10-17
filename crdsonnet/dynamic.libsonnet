@@ -1,3 +1,4 @@
+local d = import './vendor/github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
 {
   local this = self,
 
@@ -25,26 +26,46 @@
     ]);
     'with' + std.asciiUpper(n[0]) + n[1:],
 
-  withFunction(name, parents)::
-    {
+  functionHelp(name, object):: {
+    ['#%s' % name]::
+      d.fn(
+        help=(if 'description' in object
+              then object.description
+              else ''),
+        args=[d.arg(
+          'value',
+          (if 'type' in object
+           then object.type
+           else 'string')
+        )]
+      ),
+  },
+
+  withFunction(name, parents, object)::
+    this.functionHelp(this.functionName(name), object)
+    + {
       [this.functionName(name)](value):
         this.nestInParents(name, parents, { [name]: value }),
     },
 
-  withConstant(name, parents, value)::
-    {
+  withConstant(name, parents, object)::
+    this.functionHelp(this.functionName(name), object)
+    + {
       [this.functionName(name)]():
-        this.nestInParents(name, parents, { [name]: value }),
+        this.nestInParents(name, parents, { [name]: object.const }),
     },
 
-  mixinFunction(name, parents)::
-    {
+  mixinFunction(name, parents, object)::
+    this.functionHelp(this.functionName(name) + 'Mixin', object)
+    + {
       [this.functionName(name) + 'Mixin'](value):
         this.nestInParents(name, parents, { [name]+: value }),
     },
 
-  arrayFunctions(name, parents)::
-    {
+  arrayFunctions(name, parents, object)::
+    this.functionHelp(this.functionName(name), object)
+    + this.functionHelp(this.functionName(name) + 'Mixin', object)
+    + {
       [this.functionName(name)](value):
         this.nestInParents(
           name,
@@ -60,8 +81,12 @@
         ),
     },
 
-  otherFunction(name, functionname)::
-    this.named(name, { [functionname](value): value }),
+  otherFunction(name, functionname, object)::
+    this.named(
+      name,
+      this.functionHelp(functionname, object)
+      + { [functionname](value): value }
+    ),
 
   named(name, object)::
     {

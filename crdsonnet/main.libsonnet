@@ -14,8 +14,8 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
   handleObject(name, parents, object, refs={})::
     (
       if parents != []
-      then this.render.withFunction(name, parents)
-           + this.render.mixinFunction(name, parents)
+      then this.render.withFunction(name, parents, object)
+           + this.render.mixinFunction(name, parents, object)
       else this.render.nilvalue
     )
     + (
@@ -70,23 +70,25 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
       then this.render.named(name, this.handleComposite(name, parents, array, refs))
       else this.render.nilvalue
     )
-    + this.render.arrayFunctions(name, parents),
+    + this.render.arrayFunctions(name, parents, array),
 
   handleConstant(name, parents, object)::
-    this.render.withConstant(name, parents, object.const),
+    this.render.withConstant(name, parents, object),
 
   handleOther(name, parents, object)::
     if std.objectHas(object, 'type') && parents == []
     then
       // Provide constructor for simple root schemas
       local typename = std.asciiUpper(object.type[0]) + object.type[1:];
-      this.render.otherFunction(name, this.camelCaseKind('new' + typename))
+      if object.type == 'string'
+      then {}
+      else this.render.otherFunction(name, this.camelCaseKind('new' + typename), object)
 
     else if !std.member(
       ['object', 'array', 'composite', 'ref'],
       this.getObjectType(object)
     )
-    then this.render.withFunction(name, parents)
+    then this.render.withFunction(name, parents, object)
     else this.render.nilvalue,
 
   handleComposite(name, parents, object, refs={})::

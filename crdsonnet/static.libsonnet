@@ -24,7 +24,7 @@
     ]);
     'with' + std.asciiUpper(n[0]) + n[1:],
 
-  withFunction(name, parents)::
+  withFunction(name, parents, object)::
     |||
       %s(value): { %s },
     ||| % [
@@ -32,15 +32,15 @@
       this.nestInParents(name, parents, name + ': value'),
     ],
 
-  withConstant(name, parents, value)::
+  withConstant(name, parents, object)::
     |||
       %s(): { %s },
     ||| % [
       this.functionName(name),
-      this.nestInParents(name, parents, name + ": '" + value + "'"),
+      this.nestInParents(name, parents, name + ": '" + object.const + "'"),
     ],
 
-  mixinFunction(name, parents)::
+  mixinFunction(name, parents, object)::
     |||
       %sMixin(value): { %s },
     ||| % [
@@ -48,7 +48,7 @@
       this.nestInParents(name, parents, name + '+: value'),
     ],
 
-  arrayFunctions(name, parents)::
+  arrayFunctions(name, parents, object)::
     |||
       %s(value): { %s },
       %sMixin(value): { %s },
@@ -67,7 +67,7 @@
       ),
     ],
 
-  otherFunction(name, functionname)::
+  otherFunction(name, functionname, object)::
     '%s+: { %s(value): value },' % [
       name,
       functionname,
