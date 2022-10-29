@@ -26,9 +26,14 @@
 
   withFunction(name, parents, object)::
     |||
-      %s(value): { %s },
+      %s(value%s): { %s },
     ||| % [
       this.functionName(name),
+      (if 'default' in object
+       then '=%s' % (if std.isString(object.default)
+                     then '"%s"' % object.default
+                     else object.default)
+       else ''),
       this.nestInParents(name, parents, name + ': value'),
     ],
 
@@ -38,6 +43,17 @@
     ||| % [
       this.functionName(name),
       this.nestInParents(name, parents, name + ": '" + object.const + "'"),
+    ],
+
+  withBoolean(name, parents, object)::
+    |||
+      %s(value=%s): { %s },
+    ||| % [
+      this.functionName(name),
+      (if 'default' in object
+       then object.default
+       else 'true'),
+      this.nestInParents(name, parents, name + ': value'),
     ],
 
   mixinFunction(name, parents, object)::

@@ -43,16 +43,28 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
 
   withFunction(name, parents, object)::
     this.functionHelp(this.functionName(name), object)
-    + {
-      [this.functionName(name)](value):
-        this.nestInParents(name, parents, { [name]: value }),
-    },
+    + (if 'default' in object
+       then {
+         [this.functionName(name)](value=object.default):
+           this.nestInParents(name, parents, { [name]: value }),
+       }
+       else {
+         [this.functionName(name)](value):
+           this.nestInParents(name, parents, { [name]: value }),
+       }),
 
   withConstant(name, parents, object)::
     this.functionHelp(this.functionName(name), object)
     + {
       [this.functionName(name)]():
         this.nestInParents(name, parents, { [name]: object.const }),
+    },
+
+  withBoolean(name, parents, object)::
+    this.functionHelp(this.functionName(name), object)
+    + {
+      [this.functionName(name)](value=true):
+        this.nestInParents(name, parents, { [name]: value }),
     },
 
   mixinFunction(name, parents, object)::
