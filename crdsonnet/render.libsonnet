@@ -4,6 +4,10 @@
   new(r): {
     local this = self,
 
+    nilvalue: r.nilvalue,
+    properties: r.properties,
+    nestInParents(parents, object): r.nestInParents('', parents, object),
+
     render(schema):
       r.properties(this.schema(schema)),
 
@@ -48,7 +52,10 @@
     ,
     // foldEnd
 
-    other(schema): r.withFunction(schema._name, schema._parents, schema),
+    other(schema):
+      if std.length(schema._parents) != 0
+      then r.withFunction(schema._name, schema._parents, schema)
+      else r.nilvalue,
 
     const(schema): r.withConstant(schema._name, schema._parents, schema),
 
@@ -56,9 +63,6 @@
 
     functions(schema):
       // foldStart
-      // The parents check prevents that these functions get created on the root object.
-      // However this might not be very correct as the functions in this library can also
-      // be used to render a part of a schema.
       if std.length(schema._parents) != 0
       then r.withFunction(schema._name, schema._parents, schema)
            + r.mixinFunction(schema._name, schema._parents, schema)
@@ -90,8 +94,9 @@
       // foldStart
       r.arrayFunctions(schema._name, schema._parents, schema)
       + (
-        if 'items' in schema && std.isObject(schema.items)
-        then this.schema(schema.items)
+        if 'items' in schema
+           && std.isObject(schema.items)
+        then this.schema(schema.items { _parents: [] })
         else r.nilvalue
       ),
     // foldEnd

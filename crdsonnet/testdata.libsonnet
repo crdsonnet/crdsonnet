@@ -1,6 +1,8 @@
 local schemaDB = import './schemadb.libsonnet';
 
 {
+  crd: std.parseYaml(importstr './crd-certificates.yaml'),
+
   db:
     schemaDB.add({
       '$id': 'https://example.com/schemas/address',

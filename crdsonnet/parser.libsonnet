@@ -1,3 +1,4 @@
+local schemadb_util = import './schemadb.libsonnet';
 {
   local this = self,
 
@@ -140,12 +141,12 @@
     // foldStart
     local getFragment(baseURI, ref) =
       local split = std.splitLimit(ref, '#', 2);
-      local schema = schemaDB.get(baseURI + split[0]);
+      local schema = schemadb_util.get(schemaDB, baseURI + split[0]);
       if schema != {}
       then
         this.resolveRef(
           '#' + split[1],
-          schemaDB.get(baseURI + split[0]),
+          schemadb_util.get(schemaDB, baseURI + split[0]),
           schemaDB,
         )
       else {};
@@ -160,7 +161,7 @@
         // Absolute URI with fragment
         then getFragment(baseURI, path)
         // Absolute URI
-        else schemaDB.get(baseURI + path)
+        else schemadb_util.get(schemaDB, baseURI + path)
 
       // Relative reference
       else if std.startsWith(ref, '/')
@@ -170,7 +171,7 @@
         // Relative reference with fragment
         then getFragment(baseURI, ref)
         // Relative reference
-        else schemaDB.get(baseURI + ref)
+        else schemadb_util.get(schemaDB, baseURI + ref)
 
       // Fragment only
       else if std.startsWith(ref, '#')
