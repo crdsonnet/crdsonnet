@@ -11,7 +11,7 @@ local schemadb_util = import './schemadb.libsonnet';
 
   getRefName(ref): std.reverse(std.split(ref, '/'))[0],
 
-  parseSchema(key, schema, currentSchema, schemaDB, parents=[]):
+  parseSchema(key, schema, currentSchema, schemaDB={}, parents=[]):
     // foldStart
     if std.isBoolean(schema)
     then { [key]+: schema }
@@ -179,9 +179,12 @@ local schemadb_util = import './schemadb.libsonnet';
         local split = std.split(ref, '/')[1:];
         local find(schema, keys) =
           local key = keys[0];
-          if std.length(keys) == 1
-          then schema[key]
-          else find(schema[key], keys[1:]);
+          if key in schema
+          then
+            if std.length(keys) == 1
+            then schema[key]
+            else find(schema[key], keys[1:])
+          else {};
         find(currentSchema, split)
 
       else {};
@@ -196,4 +199,4 @@ local schemadb_util = import './schemadb.libsonnet';
   // foldEnd
 }
 
-// vim: foldmethod=marker foldmarker=foldStart,foldEnd
+// vim: foldmethod=marker foldmarker=foldStart,foldEnd foldlevel=0

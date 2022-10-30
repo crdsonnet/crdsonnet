@@ -117,20 +117,17 @@
       '{ mixin: self }'
     ),
 
-  newFunction(apiVersion, kind, parents)::
+  newFunction(parents)::
     '{\n %s \n}' %
     this.nestInParents(
       'new',
       parents,
       |||
         new(name):
-          self.withApiVersion('%(apiVersion)s')
-          + self.withKind('%(kind)s')
+          self.withApiVersion()
+          + self.withKind()
           + self.metadata.withName(name),
-      ||| % {
-        apiVersion: apiVersion,
-        kind: kind,
-      },
+      |||,
     ),
 
   fromSchema(grouping, version, parsed)::

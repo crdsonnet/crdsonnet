@@ -125,14 +125,14 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
       { mixin: self },
     ),
 
-  newFunction(apiVersion, kind, parents)::
+  newFunction(parents)::
     this.nestInParents(
       'new',
       parents,
       {
         new(name):
-          self.withApiVersion(apiVersion)
-          + self.withKind(kind)
+          self.withApiVersion()
+          + self.withKind()
           + self.metadata.withName(name),
       },
     ),

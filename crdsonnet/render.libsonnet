@@ -7,13 +7,18 @@
     nilvalue: r.nilvalue,
     properties: r.properties,
     nestInParents(parents, object): r.nestInParents('', parents, object),
+    newFunction: r.newFunction,
 
     render(schema):
       r.properties(this.schema(schema)),
 
     schema(schema):
       // foldStart
-      if 'type' in schema
+
+      if 'const' in schema
+      then self.const(schema)  // value is a constant
+
+      else if 'type' in schema
       then
         if std.isBoolean(schema.type)
         then
@@ -34,9 +39,6 @@
         then self.boolean(schema)  // type=boolean
 
         else self.other(schema)  // any other type
-
-      else if 'const' in schema
-      then self.const(schema)  // value is a constant
 
       else if 'enum' in schema
       then self.other(schema)  // value is one of a list
@@ -86,6 +88,7 @@
               )
             )
           )
+        else r.nilvalue
       )
       + self.complex(schema),
     // foldEnd
@@ -141,4 +144,4 @@
   },
 }
 
-// vim: foldmethod=marker foldmarker=foldStart,foldEnd
+// vim: foldmethod=marker foldmarker=foldStart,foldEnd foldlevel=0
