@@ -231,7 +231,7 @@ local properties = {
            then
              // not sure why this is a list, grabbing the first item
              local gvk = component['x-kubernetes-group-version-kind'][0];
-             withGroupVersionKind(gvk.group, gvk.version, gvk.kind)
+             properties.withGroupVersionKind(gvk.group, gvk.version, gvk.kind)
            else {});
 
       local parsed = parser.parseSchema(
@@ -260,7 +260,7 @@ local properties = {
              then
                // not sure why this is a list, grabbing the first item
                local gvk = component['x-kubernetes-group-version-kind'][0];
-               withGroupVersionKind(gvk.group, gvk.version, gvk.kind)
+               properties.withGroupVersionKind(gvk.group, gvk.version, gvk.kind)
              else {});
 
         local name = camelCaseKind(items[0]);
