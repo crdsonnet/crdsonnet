@@ -4,7 +4,7 @@ local schemadb_util = import './schemadb.libsonnet';
 local testdata = import './testdata.libsonnet';
 local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
 
-local defaultRender = defaultRender;
+local defaultRender = 'static';
 
 local camelCaseKind(kind) =
   local s = xtd.camelcase.split(kind);
