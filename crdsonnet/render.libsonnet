@@ -38,9 +38,6 @@
 
         else self.other(schema)  // any other type
 
-      else if 'enum' in schema
-      then self.other(schema)  // value is one of a list
-
       else if 'allOf' in schema
               || 'anyOf' in schema
               || 'oneOf' in schema
@@ -74,7 +71,7 @@
       else r.nilvalue,
     // foldEnd
 
-    complex(schema):
+    xofParts(schema):
       // foldStart
       local handle(schema, k) =
         if k in schema
@@ -91,6 +88,17 @@
       + handle(schema, 'oneOf'),
     // foldEnd
 
+    const(schema): r.withConstant(schema),
+
+    boolean(schema): r.withBoolean(schema),
+
+    other(schema):
+      // foldStart
+      if std.length(schema._parents) != 0 && '_name' in schema
+      then r.withFunction(schema)
+      else r.nilvalue,
+    //foldEnd
+
     object(schema):
       // foldStart
       local properties = (
@@ -105,9 +113,9 @@
         else r.nilvalue
       );
 
-      local complex = self.complex(schema { _parents: super._parents[1:] });
+      local xofParts = self.xofParts(schema { _parents: super._parents[1:] });
 
-      local parsed = properties + complex;
+      local parsed = properties + xofParts;
 
       self.functions(schema)
       + self.nameParsed(schema, parsed),
@@ -126,21 +134,10 @@
 
     xof(schema):
       // foldStart
-      local parsed = self.complex(schema);
+      local parsed = self.xofParts(schema);
       self.functions(schema)
       + self.nameParsed(schema, parsed),
     // foldEnd
-
-    other(schema):
-      // foldStart
-      if std.length(schema._parents) != 0 && '_name' in schema
-      then r.withFunction(schema)
-      else r.nilvalue,
-    //foldEnd
-
-    const(schema): r.withConstant(schema),
-
-    boolean(schema): r.withBoolean(schema),
   },
 }
 
