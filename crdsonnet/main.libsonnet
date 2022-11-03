@@ -1,7 +1,5 @@
 local parser = import './parser.libsonnet';
 local renderer = import './render.libsonnet';
-local schemadb_util = import './schemadb.libsonnet';
-local testdata = import './testdata.libsonnet';
 local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
 
 local defaultRender = 'static';
@@ -143,7 +141,7 @@ local properties = {
     local output = std.foldl(
       function(acc, version)
         acc
-        + renderer[render].properties(
+        + renderer[render].toObject(
           renderer[render].nestInParents(
             [grouping, version._name],
             renderer[render].schema(
@@ -201,7 +199,7 @@ local properties = {
     local output = std.foldl(
       function(acc, version)
         acc
-        + renderer[render].properties(
+        + renderer[render].toObject(
           renderer[render].nestInParents(
             [grouping, version._name],
             renderer[render].schema(
@@ -271,7 +269,7 @@ local properties = {
         ) + { [name]+: { _name: name } };
 
         acc
-        + renderer[render].properties(
+        + renderer[render].toObject(
           renderer[render].nestInParents(
             [items[2], items[1]],
             renderer[render].schema(parsed[name])
@@ -285,32 +283,5 @@ local properties = {
     ),
   // foldEnd
 }
-//{
-//local schema = import 'objectmeta.json',
-//parsed: self.fromKubernetesOpenAPI(schema),
-//local component = schema.definitions['io.k8s.api.core.v1.Pod'],
-//parsed: self.fromOpenAPI('pod', component, schema),
-
-//parsed: local lib = self.fromCRD(testdata.crd, 'cert-manager.io', render='dynamic');
-//       lib.nogroup.v1.certificate.new('n'),
-
-//local schema = testdata.db['https://example.com/schemas/customer'],
-// local schema = testdata.testSchemas[0],
-//parsed: root.fromSchema(
-//  //parser.getRefName(schema['$ref']),
-//  parser.getRefName(parser.getID(schema)),
-//  schema,
-//  testdata.db
-//),
-//parsed: [
-//  root.fromSchema(
-//    std.trace(parser.getRefName(parser.getID(schema)), parser.getRefName(parser.getID(schema))),
-//    schema,
-//    testdata.db
-//  )
-//  for schema in testdata.testSchemas
-//  if std.trace(parser.getRefName(parser.getID(schema)), true)
-//],
-//}.parsed
 
 // vim: foldmethod=marker foldmarker=foldStart,foldEnd foldlevel=0

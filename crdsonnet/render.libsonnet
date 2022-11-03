@@ -1,20 +1,18 @@
 {
   static: self.new(import 'static.libsonnet'),
   dynamic: self.new(import 'dynamic.libsonnet'),
-  new(r): {
-    local this = self,
 
+  new(r): {
     nilvalue: r.nilvalue,
-    properties: r.properties,
+    toObject: r.toObject,
     nestInParents(parents, object): r.nestInParents('', parents, object),
     newFunction: r.newFunction,
 
     render(schema):
-      r.properties(this.schema(schema)),
+      r.toObject(self.schema(schema)),
 
     schema(schema):
       // foldStart
-
       if 'const' in schema
       then self.const(schema)  // value is a constant
 
@@ -46,62 +44,34 @@
       else if 'allOf' in schema
               || 'anyOf' in schema
               || 'oneOf' in schema
-      then
-        self.functions(schema)
-        + self.complex(schema)  // value can be xOf
+      then self.xof(schema)  // value can be xOf
 
       else self.other(schema)
     ,
     // foldEnd
 
-    other(schema):
-      if std.length(schema._parents) != 0
-      then r.withFunction(schema._name, schema._parents, schema)
-      else r.nilvalue,
-
-    const(schema): r.withConstant(schema._name, schema._parents, schema),
-
-    boolean(schema): r.withBoolean(schema._name, schema._parents, schema),
+    nameParsed(schema, parsed):
+      // foldStart
+      if '_name' in schema
+         && parsed != r.nilvalue
+      then
+        r.named(
+          schema._name,
+          r.toObject(
+            parsed
+          )
+        )
+      else
+        parsed
+    ,
+    // foldEnd
 
     functions(schema):
       // foldStart
-      if std.length(schema._parents) != 0
-      then r.withFunction(schema._name, schema._parents, schema)
-           + r.mixinFunction(schema._name, schema._parents, schema)
+      if std.length(schema._parents) != 0 && '_name' in schema
+      then r.withFunction(schema)
+           + r.mixinFunction(schema)
       else r.nilvalue,
-    // foldEnd
-
-    object(schema):
-      // foldStart
-      self.functions(schema)
-      + (
-        if 'properties' in schema
-        then
-          r.named(
-            schema._name,
-            r.properties(
-              std.foldl(
-                function(acc, p)
-                  acc + this.schema(schema.properties[p]),
-                std.objectFields(schema.properties),
-                r.nilvalue
-              )
-            )
-          )
-        else r.nilvalue
-      )
-      + self.complex(schema),
-    // foldEnd
-
-    array(schema):
-      // foldStart
-      r.arrayFunctions(schema._name, schema._parents, schema)
-      + (
-        if 'items' in schema
-           && std.isObject(schema.items)
-        then this.schema(schema.items { _parents: [] })
-        else r.nilvalue
-      ),
     // foldEnd
 
     complex(schema):
@@ -109,38 +79,68 @@
       local handle(schema, k) =
         if k in schema
         then
-          local parsed =
-            std.foldl(
-              function(acc, n)
-                acc
-                + (if '_name' in n
-                   then r.named(n._name, r.properties(this.schema(n)))
-                   else r.nilvalue),
-              schema[k],
-              r.nilvalue
-            );
-          r.named(
-            schema._name,
-            r.properties(
-              r.named(
-                k,  // expose under 'xOf' to express intent
-                r.properties(
-                  parsed
-                )
-              )
-              + r.named(
-                'types',  // expose under 'types' for backwards compat
-                r.properties(
-                  parsed
-                )
-              )
-            )
+          std.foldl(
+            function(acc, n)
+              acc + self.schema(n),
+            schema[k],
+            r.nilvalue
           )
         else r.nilvalue;
       handle(schema, 'allOf')
       + handle(schema, 'anyOf')
       + handle(schema, 'oneOf'),
     // foldEnd
+
+    object(schema):
+      // foldStart
+      local properties = (
+        if 'properties' in schema
+        then
+          std.foldl(
+            function(acc, p)
+              acc + self.schema(schema.properties[p]),
+            std.objectFields(schema.properties),
+            r.nilvalue
+          )
+        else r.nilvalue
+      );
+
+      local complex = self.complex(schema { _parents: super._parents[1:] });
+
+      local parsed = properties + complex;
+
+      self.functions(schema)
+      + self.nameParsed(schema, parsed),
+    // foldEnd
+
+    array(schema):
+      // foldStart
+      r.arrayFunctions(schema)
+      + (
+        if 'items' in schema
+           && std.isObject(schema.items)
+        then self.schema(schema.items { _parents: [] })
+        else r.nilvalue
+      ),
+    // foldEnd
+
+    xof(schema):
+      // foldStart
+      local parsed = self.complex(schema);
+      self.functions(schema)
+      + self.nameParsed(schema, parsed),
+    // foldEnd
+
+    other(schema):
+      // foldStart
+      if std.length(schema._parents) != 0 && '_name' in schema
+      then r.withFunction(schema)
+      else r.nilvalue,
+    //foldEnd
+
+    const(schema): r.withConstant(schema),
+
+    boolean(schema): r.withBoolean(schema),
   },
 }
 

@@ -26,104 +26,80 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
     ]);
     'with' + std.asciiUpper(n[0]) + n[1:],
 
-  functionHelp(name, object):: {
-    ['#%s' % name]::
+  functionHelp(functionName, schema):: {
+    ['#%s' % functionName]::
       d.fn(
-        help=(if 'description' in object
-              then object.description
+        help=(if 'description' in schema
+              then schema.description
               else ''),
         args=[d.arg(
           'value',
-          (if 'type' in object
-           then object.type
+          (if 'type' in schema
+           then schema.type
            else 'string')
         )]
       ),
   },
 
-  withFunction(name, parents, object)::
-    this.functionHelp(this.functionName(name), object)
-    + (if 'default' in object
+  withFunction(schema)::
+    this.functionHelp(this.functionName(schema._name), schema)
+    + (if 'default' in schema
        then {
-         [this.functionName(name)](value=object.default):
-           this.nestInParents(name, parents, { [name]: value }),
+         [this.functionName(schema._name)](value=schema.default):
+           this.nestInParents(schema._name, schema._parents, { [schema._name]: value }),
        }
        else {
-         [this.functionName(name)](value):
-           this.nestInParents(name, parents, { [name]: value }),
+         [this.functionName(schema._name)](value):
+           this.nestInParents(schema._name, schema._parents, { [schema._name]: value }),
        }),
 
-  withConstant(name, parents, object)::
-    this.functionHelp(this.functionName(name), object)
+  withConstant(schema)::
+    this.functionHelp(this.functionName(schema._name), schema)
     + {
-      [this.functionName(name)]():
-        this.nestInParents(name, parents, { [name]: object.const }),
+      [this.functionName(schema._name)]():
+        this.nestInParents(schema._name, schema._parents, { [schema._name]: schema.const }),
     },
 
-  withBoolean(name, parents, object)::
-    this.functionHelp(this.functionName(name), object)
+  withBoolean(schema)::
+    this.functionHelp(this.functionName(schema._name), schema)
     + {
-      [this.functionName(name)](value=true):
-        this.nestInParents(name, parents, { [name]: value }),
+      [this.functionName(schema._name)](value=true):
+        this.nestInParents(schema._name, schema._parents, { [schema._name]: value }),
     },
 
-  mixinFunction(name, parents, object)::
-    this.functionHelp(this.functionName(name) + 'Mixin', object)
+  mixinFunction(schema)::
+    this.functionHelp(this.functionName(schema._name) + 'Mixin', schema)
     + {
-      [this.functionName(name) + 'Mixin'](value):
-        this.nestInParents(name, parents, { [name]+: value }),
+      [this.functionName(schema._name) + 'Mixin'](value):
+        this.nestInParents(schema._name, schema._parents, { [schema._name]+: value }),
     },
 
-  arrayFunctions(name, parents, object)::
-    this.functionHelp(this.functionName(name), object)
-    + this.functionHelp(this.functionName(name) + 'Mixin', object)
+  arrayFunctions(schema)::
+    this.functionHelp(this.functionName(schema._name), schema)
+    + this.functionHelp(this.functionName(schema._name) + 'Mixin', schema)
     + {
-      [this.functionName(name)](value):
+      [this.functionName(schema._name)](value):
         this.nestInParents(
-          name,
-          parents,
-          this.named(name, if std.isArray(value) then value else [value])
+          schema._name,
+          schema._parents,
+          this.named(schema._name, if std.isArray(value) then value else [value])
         ),
 
-      [this.functionName(name) + 'Mixin'](value):
+      [this.functionName(schema._name) + 'Mixin'](value):
         this.nestInParents(
-          name,
-          parents,
-          this.named(name, if std.isArray(value) then value else [value])
+          schema._name,
+          schema._parents,
+          this.named(schema._name, if std.isArray(value) then value else [value])
         ),
     },
-
-  otherFunction(name, functionname, object)::
-    this.named(
-      name,
-      this.functionHelp(functionname, object)
-      + { [functionname](value): value }
-    ),
 
   named(name, object)::
     {
       [name]+: object,
     },
 
-  compositeRef(name, refname, parsed)::
-    {
-      // Expose composite types in a nested `types` field
-      [name]+: {
-        types+: {
-          [refname]+: parsed,
-        },
-      },
-    },
-
-  properties(object)::
+  toObject(object)::
     object,
-
-  withMixin(name, parents)::
-    this.nestInParents(
-      name,
-      parents,
-      { mixin: self },
-    ),
 
   newFunction(parents)::
     this.nestInParents(
@@ -136,11 +112,6 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
           + self.metadata.withName(name),
       },
     ),
-
-  fromSchema(grouping, version, parsed)::
-    this.nestInParents(
-      '',
-      [grouping, version],
-      parsed,
-    ),
 }
+
+// vim: foldmethod=indent

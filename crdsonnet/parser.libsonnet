@@ -104,19 +104,13 @@ local schemadb_util = import './schemadb.libsonnet';
   parseSchemaList(key, list, currentSchema, schemaDB, parents):
     // foldStart
     [
-      local a =
-        if std.isObject(item)
-           && '$ref' in item
-        then parents + [this.getRefName(item['$ref'])]
-        else parents;
-
       local parsed =
         this.parseSchema(
           key,
           item,
           currentSchema,
           schemaDB,
-          a,
+          parents,
         )[key];
 
       // Due to the nature of list items in JSON they don't have a key we can use as

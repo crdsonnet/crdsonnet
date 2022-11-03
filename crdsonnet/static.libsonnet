@@ -24,69 +24,63 @@
     ]);
     'with' + std.asciiUpper(n[0]) + n[1:],
 
-  withFunction(name, parents, object)::
+  withFunction(schema)::
     |||
       %s(value%s): { %s },
     ||| % [
-      this.functionName(name),
-      (if 'default' in object
-       then '=%s' % (if std.isString(object.default)
-                     then '"%s"' % object.default
-                     else object.default)
+      this.functionName(schema._name),
+      (if 'default' in schema
+       then '=%s' % (if std.isString(schema.default)
+                     then '"%s"' % schema.default
+                     else schema.default)
        else ''),
-      this.nestInParents(name, parents, name + ': value'),
+      this.nestInParents(schema._name, schema._parents, schema._name + ': value'),
     ],
 
-  withConstant(name, parents, object)::
+  withConstant(schema)::
     |||
       %s(): { %s },
     ||| % [
-      this.functionName(name),
-      this.nestInParents(name, parents, name + ": '" + object.const + "'"),
+      this.functionName(schema._name),
+      this.nestInParents(schema._name, schema._parents, schema._name + ": '" + schema.const + "'"),
     ],
 
-  withBoolean(name, parents, object)::
+  withBoolean(schema)::
     |||
       %s(value=%s): { %s },
     ||| % [
-      this.functionName(name),
-      (if 'default' in object
-       then object.default
+      this.functionName(schema._name),
+      (if 'default' in schema
+       then schema.default
        else 'true'),
-      this.nestInParents(name, parents, name + ': value'),
+      this.nestInParents(schema._name, schema._parents, schema._name + ': value'),
     ],
 
-  mixinFunction(name, parents, object)::
+  mixinFunction(schema)::
     |||
       %sMixin(value): { %s },
     ||| % [
-      this.functionName(name),
-      this.nestInParents(name, parents, name + '+: value'),
+      this.functionName(schema._name),
+      this.nestInParents(schema._name, schema._parents, schema._name + '+: value'),
     ],
 
-  arrayFunctions(name, parents, object)::
+  arrayFunctions(schema)::
     |||
       %s(value): { %s },
       %sMixin(value): { %s },
     ||| % [
-      this.functionName(name),
+      this.functionName(schema._name),
       this.nestInParents(
-        name,
-        parents,
-        ' %s: if std.isArray(value) then value else [value] ' % name,
+        schema._name,
+        schema._parents,
+        ' %s: if std.isArray(value) then value else [value] ' % schema._name,
       ),
-      this.functionName(name),
+      this.functionName(schema._name),
       this.nestInParents(
-        name,
-        parents,
-        ' %s+: if std.isArray(value) then value else [value] ' % name,
+        schema._name,
+        schema._parents,
+        ' %s+: if std.isArray(value) then value else [value] ' % schema._name,
       ),
-    ],
-
-  otherFunction(name, functionname, object)::
-    '%s+: { %s(value): value },' % [
-      name,
-      functionname,
     ],
 
   named(name, object)::
@@ -97,25 +91,8 @@
       object,
     ],
 
-  // Don't process refs in composite
-  compositeRef(name, refname, parsed):: '',
-  //|||
-  //  ['%s']+: { ['%s']+: { %s } },
-  //||| % [
-  //  name,
-  //  refname,
-  //  parsed,
-  //],
-
-  properties(object)::
+  toObject(object)::
     '{ %s }' % object,
-
-  withMixin(name, parents)::
-    this.nestInParents(
-      name,
-      parents,
-      '{ mixin: self }'
-    ),
 
   newFunction(parents)::
     '{\n %s \n}' %
@@ -129,12 +106,6 @@
           + self.metadata.withName(name),
       |||,
     ),
-
-  fromSchema(grouping, version, parsed)::
-    '{\n %s \n}' %
-    this.nestInParents(
-      '',
-      [grouping, version],
-      parsed,
-    ),
 }
+
+// vim: foldmethod=indent
