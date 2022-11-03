@@ -2,7 +2,7 @@ local parser = import './parser.libsonnet';
 local renderer = import './render.libsonnet';
 local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
 
-local defaultRender = 'static';
+local defaultRender = 'dynamic';
 
 local camelCaseKind(kind) =
   local s = xtd.camelcase.split(kind);
