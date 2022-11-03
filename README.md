@@ -9,13 +9,13 @@ components.
 ## Install
 
 ```console
-jb install https://github.com/Duologic/crdsonnet
+jb install https://github.com/Duologic/crdsonnet/crdsonnet
 ```
 
 ## Usage
 
 ```jsonnet
-local crdsonnet = import 'github.com/Duologic/crdsonnet/main.libsonnet';
+local crdsonnet = import 'github.com/Duologic/crdsonnet/crdsonnet/main.libsonnet';
 local example = crdsonnet.fromCRD(someCustomResourceDefinition, 'example.io');
 
 {
