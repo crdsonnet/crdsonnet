@@ -14,7 +14,7 @@ jb install https://github.com/Duologic/crdsonnet/crdsonnet
 
 ## Usage
 
-Basic usage for generating a library from a CustomResourceDefinition:
+Generate a library from a CustomResourceDefinition:
 
 ```jsonnet
 // main.libsonnet
@@ -23,7 +23,7 @@ local crdsonnet = import 'github.com/Duologic/crdsonnet/crdsonnet/main.libsonnet
 crdsonnet.fromCRD(
   someCustomResourceDefinition,
   'example.io'
-);
+)
 ```
 
 Then use it:
@@ -31,6 +31,7 @@ Then use it:
 ```jsonnet
 // example.libsonnet
 local example = './main.libsonnet';
+
 {
   example_object: example.core.v1.someObject.new(name='example'),
 }
