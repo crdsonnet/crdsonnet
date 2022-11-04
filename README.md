@@ -14,14 +14,23 @@ jb install https://github.com/Duologic/crdsonnet/crdsonnet
 
 ## Usage
 
-```jsonnet
-local crdsonnet = import 'github.com/Duologic/crdsonnet/crdsonnet/main.libsonnet';
-local example =
-  crdsonnet.fromCRD(
-    someCustomResourceDefinition,
-    'example.io'
-  );
+Basic usage for generating a library from a CustomResourceDefinition:
 
+```jsonnet
+// main.libsonnet
+local crdsonnet = import 'github.com/Duologic/crdsonnet/crdsonnet/main.libsonnet';
+
+crdsonnet.fromCRD(
+  someCustomResourceDefinition,
+  'example.io'
+);
+```
+
+Then use it:
+
+```jsonnet
+// example.libsonnet
+local example = './main.libsonnet';
 {
   example_object: example.core.v1.someObject.new(name='example'),
 }
@@ -39,6 +48,7 @@ To do this, first set the `render` to 'static':
 ```jsonnet
 // static.libsonnet
 local crdsonnet = import 'github.com/Duologic/crdsonnet/crdsonnet/main.libsonnet';
+
 local example =
   crdsonnet.fromCRD(
     someCustomResourceDefinition,
@@ -46,7 +56,7 @@ local example =
     render='static'
   );
 
-  example
+example
 ```
 
 Then tell jsonnet to expect a string as output:
@@ -61,10 +71,28 @@ jsonnet -S -J vendor static.libsonnet
 Use the `xtd.inspect` package to view the rendered tree:
 
 ```jsonnet
-local crdsonnet = import 'github.com/Duologic/crdsonnet/crdsonnet/main.libsonnet';
+// inspect.libsonnet
 local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
 
-local example = crdsonnet.fromCRD(someCustomResourceDefinition, 'example.io');
+local example = './main.libsonnet';
 
 xtd.inspect.inspect(example, 10)
+```
+
+### Documentation
+
+The dynamic rendering comes with documentation included. It leverages
+[docsonnet](https://github.com/jsonnet-libs/docsonnet).
+
+```jsonnet
+// docs.libsonnet
+local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
+
+local example = import './main.libsonnet';
+
+d.render(example)
+```
+
+```console
+jsonnet -J vendor -S -c -m docs docs.libsonnet
 ```
