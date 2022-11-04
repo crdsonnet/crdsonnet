@@ -89,7 +89,7 @@ local defaultRender = 'dynamic';
         + helpers.properties.withGroupVersionKind(
           definition.spec.group,
           version.name,
-          definition.spec.names.kind,
+          kind,
         );
 
       parser.parseSchema(
