@@ -16,17 +16,49 @@ jb install https://github.com/Duologic/crdsonnet/crdsonnet
 
 ```jsonnet
 local crdsonnet = import 'github.com/Duologic/crdsonnet/crdsonnet/main.libsonnet';
-local example = crdsonnet.fromCRD(someCustomResourceDefinition, 'example.io');
+local example =
+  crdsonnet.fromCRD(
+    someCustomResourceDefinition,
+    'example.io'
+  );
 
 {
   example_object: example.core.v1.someObject.new(name='example'),
 }
 ```
 
+### Static rendering
+
+The library can render a static library, this can be useful when rendering them in-memory
+becomes too slow or for debugging purposes. The static rendering will represent the
+jsonnet as a string, however this kind of string manipulation is quite hard in jsonnet
+and the output can be quite ugly.
+
+To do this, first set the `render` to 'static':
+
+```jsonnet
+// static.libsonnet
+local crdsonnet = import 'github.com/Duologic/crdsonnet/crdsonnet/main.libsonnet';
+local example =
+  crdsonnet.fromCRD(
+    someCustomResourceDefinition,
+    'example.io',
+    render='static'
+  );
+
+  example
+```
+
+Then tell jsonnet to expect a string as output:
+
+
+```console
+jsonnet -S -J vendor static.libsonnet
+```
+
 ### Debug
 
-Use the `xtd.inspect` package to view the rendered tree and turn the `debug` option on to
-see debug messages:
+Use the `xtd.inspect` package to view the rendered tree:
 
 ```jsonnet
 local crdsonnet = import 'github.com/Duologic/crdsonnet/crdsonnet/main.libsonnet';
