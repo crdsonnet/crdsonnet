@@ -1,6 +1,6 @@
+local helpers = import './helpers.libsonnet';
 local parser = import './parser.libsonnet';
 local renders = import './render.libsonnet';
-local helpers = import './render.libsonnet';
 
 local defaultRender = 'dynamic';
 
