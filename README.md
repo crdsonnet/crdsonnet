@@ -32,9 +32,7 @@ Then use it:
 // example.libsonnet
 local example = './main.libsonnet';
 
-{
-  example_object: example.core.v1.someObject.new(name='example'),
-}
+example.core.v1.someObject.new(name='example')
 ```
 
 ### Static rendering
