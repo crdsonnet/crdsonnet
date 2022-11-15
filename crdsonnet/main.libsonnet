@@ -1,6 +1,7 @@
 local helpers = import './helpers.libsonnet';
 local parser = import './parser.libsonnet';
 local renders = import './render.libsonnet';
+local validate = import './validate.libsonnet';
 
 local defaultRender = 'dynamic';
 
@@ -191,6 +192,16 @@ local defaultRender = 'dynamic';
       renders[render].nilvalue
     ),
   // foldEnd
+
+  validate(object, schema, schemaDB={}):
+    local parsed = parser.parseSchema(
+      'toValidate',
+      schema,
+      schema,
+      schemaDB
+    ).toValidate;
+
+    validate.validate(object, parsed),
 }
 
 // vim: foldmethod=marker foldmarker=foldStart,foldEnd foldlevel=0
