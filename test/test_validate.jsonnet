@@ -16,19 +16,19 @@ local db =
         enum: ['United States of America', 'Canada'],
       },
     },
-    'if': {
-      properties: { country: { const: 'United States of America' } },
-    },
-    'then': {
-      properties: { postal_code:
-        { pattern: '[0-9]{5}(-[0-9]{4})?' } },
-    },
-    'else': {
-      properties:
-        { postal_code:
-          { pattern:
-            '[A-Z][0-9][A-Z][0-9][A-Z][0-9]' } },
-    },
+    //'if': {
+    //  properties: { country: { const: 'United States of America' } },
+    //},
+    //'then': {
+    //  properties: { postal_code:
+    //    { pattern: '[0-9]{5}(-[0-9]{4})?' } },
+    //},
+    //'else': {
+    //  properties:
+    //    { postal_code:
+    //      { pattern:
+    //        '[A-Z][0-9][A-Z][0-9][A-Z][0-9]' } },
+    //},
     required: ['street_address', 'city', 'state'],
   })
   + schemaDB.add({
@@ -50,7 +50,7 @@ local db =
           { '$anchor': 'sex', type: 'string', maxLength: 1, enum: ['m', 'f'] },
           { '$anchor': 'location', '$ref': '/schemas/address' },
         ],
-        //contains: { type: 'string' },
+        contains: { type: 'array' },
         //items: false,
       },
       store: {
@@ -116,9 +116,30 @@ local object =
 
 test.new(std.thisFile)
 + test.case.new(
+  name='schema == false',
+  test=test.expect.eq(
+    actual=crdsonnet.validate({}, false),
+    expected=false
+  )
+)
++ test.case.new(
+  name='schema == true',
+  test=test.expect.eq(
+    actual=crdsonnet.validate({}, true),
+    expected=true
+  )
+)
++ test.case.new(
+  name='no object, no schema',
+  test=test.expect.eq(
+    actual=crdsonnet.validate({}, {}),
+    expected=true
+  )
+)
++ test.case.new(
   name='validate smoke test',
   test=test.expect.eq(
-    actual=crdsonnet.validate(object, customerSchema),
+    actual=crdsonnet.validate(object, customerSchema, db),
     expected=true
   )
 )
