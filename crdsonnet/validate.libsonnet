@@ -11,29 +11,57 @@ local schemaDB = import './schemadb.libsonnet';
     then expression(schema[key])
     else true,
 
-  local unsupported(key, schema) =
+  local notImplemented(key, schema) =
     ifexpr(
       key,
       schema,
       function(v)
-        std.trace('JSON Schema attribute `%s` unsupported.' % key, true)
+        std.trace('JSON Schema attribute `%s` not implemented.' % key, true)
     ),
 
   validate(object, schema, trace=true)::
     // foldStart
     if std.isBoolean(schema)
     then schema
+    else if schema == {}
+    then true
     else
       local expressions = [
-        unsupported('allOf', schema),
-        unsupported('anyOf', schema),
-        unsupported('oneOf', schema),
-
-        unsupported('if', schema),
-
+        ifexpr('enum', schema, function(enum) std.member(enum, object)),
         ifexpr('const', schema, function(const) object == const),
 
-        ifexpr('enum', schema, function(enum) std.member(enum, object)),
+        notImplemented('allOf', schema),
+        notImplemented('anyOf', schema),
+        notImplemented('oneOf', schema),
+        notImplemented('not', schema),
+
+        ifexpr(
+          'if',
+          schema,
+          function(ifval)
+            if self.validate(
+              object,
+              std.mergePatch(schema { 'if': true, 'then': true }, ifval)
+            )
+            then ifexpr(
+              'then',
+              schema,
+              function(thenval)
+                self.validate(
+                  object,
+                  std.mergePatch(schema { 'if': true, 'then': true }, thenval)
+                )
+            )
+            else ifexpr(
+              'else',
+              schema,
+              function(elseval)
+                self.validate(
+                  object,
+                  std.mergePatch(schema { 'if': true, 'then': true }, elseval)
+                )
+            )
+        ),
 
         ifexpr(
           'type',
@@ -50,16 +78,31 @@ local schemaDB = import './schemadb.libsonnet';
 
             else self.types[type](object, schema)
         ),
+
+        // If 'type' is not set on the schema, then we will assume the type is
+        // std.type(object).
+        // Reasoning:
+        // For example { minimum: 2 } only makes sense for number, but if 'type' is not
+        // set, then the inequality validation will error out if the value is not
+        // a number. This applies to most validation keywords.
+        if !('type' in schema
+             || 'enum' in schema
+             || 'const' in schema)
+        then self.types[std.type(object)](object, schema)
+        else true,
+
       ];
       std.all([
         if trace
         then
           std.trace(|||
+            #/%s
             This object:
             %s
             Does not match:
             %s
           ||| % [
+            std.join('/', schema._parents),
             std.manifestJson(object),
             std.manifestJson(schema),
           ], false)
@@ -79,8 +122,8 @@ local schemaDB = import './schemadb.libsonnet';
         std.isString(object),
         ifexpr('minLength', schema, function(v) std.length(object) >= v),
         ifexpr('maxLength', schema, function(v) std.length(object) <= v),
-        unsupported('pattern', schema),
-        unsupported('format', schema),
+        notImplemented('pattern', schema),
+        //notImplemented('format', schema), // vocabulary specific
       ]),
     // foldEnd
 
@@ -128,8 +171,9 @@ local schemaDB = import './schemadb.libsonnet';
       // foldStart
       std.all([
         std.isObject(object),
-        unsupported('patternProperties', schema),
-        unsupported('unevaluatedProperties', schema),
+        notImplemented('patternProperties', schema),
+        notImplemented('dependentRequired', schema),
+        notImplemented('unevaluatedProperties', schema),
         ifexpr(
           'properties',
           schema,
@@ -194,6 +238,7 @@ local schemaDB = import './schemadb.libsonnet';
       // foldStart
       std.all([
         std.isArray(object),
+        notImplemented('unevaluatedItems', schema),
         ifexpr(
           'minItems',
           schema,

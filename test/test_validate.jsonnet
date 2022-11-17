@@ -16,19 +16,21 @@ local db =
         enum: ['United States of America', 'Canada'],
       },
     },
-    //'if': {
-    //  properties: { country: { const: 'United States of America' } },
-    //},
-    //'then': {
-    //  properties: { postal_code:
-    //    { pattern: '[0-9]{5}(-[0-9]{4})?' } },
-    //},
-    //'else': {
-    //  properties:
-    //    { postal_code:
-    //      { pattern:
-    //        '[A-Z][0-9][A-Z][0-9][A-Z][0-9]' } },
-    //},
+    'if': {
+      properties: { country: { const: 'United States of America' } },
+    },
+    'then': {
+      properties: {
+        postal_code:
+          { pattern: '[0-9]{5}(-[0-9]{4})?' },
+      },
+    },
+    'else': {
+      properties:
+        { postal_code:
+          { pattern:
+            '[A-Z][0-9][A-Z][0-9][A-Z][0-9]' } },
+    },
     required: ['street_address', 'city', 'state'],
   })
   + schemaDB.add({
@@ -50,7 +52,7 @@ local db =
           { '$anchor': 'sex', type: 'string', maxLength: 1, enum: ['m', 'f'] },
           { '$anchor': 'location', '$ref': '/schemas/address' },
         ],
-        contains: { type: 'array' },
+        //contains: { type: 'array' },
         //items: false,
       },
       store: {
@@ -111,7 +113,10 @@ local object =
   + library.customer.billing_address.withCountry()
   + library.customer.billing_address.withCity('New')
   + library.customer.billing_address.withState('York')
-  + { test: 'a' };
+  + {
+    test: 'a',
+    billing_address+: { postal_code: 'b' },
+  };
 
 
 test.new(std.thisFile)
