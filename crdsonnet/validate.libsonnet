@@ -29,11 +29,38 @@ local schemaDB = import './schemadb.libsonnet';
       local expressions = [
         ifexpr('enum', schema, function(enum) std.member(enum, object)),
         ifexpr('const', schema, function(const) object == const),
+        ifexpr('not', schema, function(not) !self.validate(object, not)),
 
-        notImplemented('allOf', schema),
-        notImplemented('anyOf', schema),
-        notImplemented('oneOf', schema),
-        notImplemented('not', schema),
+        ifexpr(
+          'allOf',
+          schema,
+          function(allOf)
+            std.all([
+              self.validate(object, s)
+              for s in allOf
+            ])
+        ),
+
+        ifexpr(
+          'anyOf',
+          schema,
+          function(anyOf)
+            std.any([
+              self.validate(object, s)
+              for s in anyOf
+            ])
+        ),
+
+        ifexpr(
+          'oneOf',
+          schema,
+          function(oneOf)
+            std.length([
+              true
+              for s in oneOf
+              if self.validate(object, s)
+            ]) == 1
+        ),
 
         ifexpr(
           'if',
