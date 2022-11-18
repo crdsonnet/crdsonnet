@@ -46,7 +46,7 @@ local schemadb_util = import './schemadb.libsonnet';
 
       {
         [key]+:
-          schemaToParse
+          this.setType(schemaToParse)
           + parse('properties', this.parseSchemaMap)
           + parse('items', this.parseSchemaSingle)
           + parse('then', this.parseSchemaSingle)
@@ -59,6 +59,63 @@ local schemadb_util = import './schemadb.libsonnet';
       }
   ,
   // foldEnd
+
+  // Schema types can be assumed based on the keywords that are used. This function
+  // normalizes the given schema by setting the type if unset so that downstream
+  // processors don't need to make this assumption.
+  setType(schema):
+    local keywords = {
+      string: [
+        'minLength',
+        'maxLength',
+        'pattern',
+      ],
+      number: [
+        'multipleOf',
+        'minimum',
+        'maximum',
+        'exclusiveMinimum',
+        'exclusiveMaximum',
+      ],
+      object: [
+        'properties',
+        'additionalProperties',
+        'required',
+        'propertyNames',
+        'minProperties',
+        'maxProperties',
+        'patternProperties',
+        'dependentRequired',
+        'unevaluatedProperties',
+      ],
+      array: [
+        'minItems',
+        'maxItems',
+        'uniqueItems',
+        'prefixItems',
+        'items',
+        'contains',
+        'minContains',
+        'maxContains',
+        'unevaluatedItems',
+      ],
+    };
+    local mapping = {
+      [keyword]: type
+      for type in std.objectFields(keywords)
+      for keyword in keywords[type]
+    };
+    local types = std.set([
+      mapping[keyword]
+      for keyword in std.objectFields(schema)
+      if keyword in mapping
+    ]);
+    if 'type' in schema || std.length(types) == 0
+    then schema
+    else if std.length(types) == 1
+    then schema { type: types[0] }
+    else schema { type: types }
+  ,
 
   parseSchemaSingle(key, schema, currentSchema, schemaDB, parents):
     // foldStart

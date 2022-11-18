@@ -78,19 +78,6 @@ local schemaDB = import './schemadb.libsonnet';
 
             else self.types[type](object, schema)
         ),
-
-        // If 'type' is not set on the schema, then we will assume the type is
-        // std.type(object).
-        // Reasoning:
-        // For example { minimum: 2 } only makes sense for number, but if 'type' is not
-        // set, then the inequality validation will error out if the value is not
-        // a number. This applies to most validation keywords.
-        if !('type' in schema
-             || 'enum' in schema
-             || 'const' in schema)
-        then self.types[std.type(object)](object, schema)
-        else true,
-
       ];
       std.all([
         if trace
