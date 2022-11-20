@@ -64,6 +64,7 @@ local schemadb_util = import './schemadb.libsonnet';
   // normalizes the given schema by setting the type if unset so that downstream
   // processors don't need to make this assumption.
   setType(schema):
+    // foldStart
     local keywords = {
       string: [
         'minLength',
@@ -116,6 +117,7 @@ local schemadb_util = import './schemadb.libsonnet';
     then schema { type: types[0] }
     else schema { type: types }
   ,
+  // foldEnd
 
   parseSchemaSingle(key, schema, currentSchema, schemaDB, parents):
     // foldStart
