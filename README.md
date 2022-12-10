@@ -87,7 +87,17 @@ The dynamic rendering comes with documentation included. It leverages
 // docs.libsonnet
 local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
 
-local example = import './main.libsonnet';
+local example =
+  (import './main.libsonnet')
+  + {
+    '#':
+      d.package.new(
+        'example',
+        'github.com/example/example',
+        'Jsonnet library for example',
+        'main.libsonnet',
+      ),
+  };
 
 d.render(example)
 ```
