@@ -123,7 +123,9 @@
 
     array(schema):
       // foldStart
-      r.arrayFunctions(schema)
+      (if '_name' in schema
+       then r.arrayFunctions(schema)
+       else r.nilvalue)
       + (
         if 'items' in schema
            && std.isObject(schema.items)
