@@ -48,7 +48,7 @@ local schemadb_util = import './schemadb.libsonnet';
         [key]+:
           schemaToParse
           + parse('properties', this.parseSchemaMap)
-          + parse('items', this.parseSchemaSingle)
+          + parse('items', this.parseSchemaItems)
           + parse('then', this.parseSchemaSingle)
           + parse('else', this.parseSchemaSingle)
           + parse('prefixItems', this.parseSchemaList)
@@ -59,6 +59,9 @@ local schemadb_util = import './schemadb.libsonnet';
       }
   ,
   // foldEnd
+
+  parseSchemaItems(key, schema, currentSchema, schemaDB, parents):
+    self.parseSchemaSingle(key, schema, currentSchema, schemaDB, []),
 
   parseSchemaSingle(key, schema, currentSchema, schemaDB, parents):
     // foldStart
