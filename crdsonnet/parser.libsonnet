@@ -11,6 +11,58 @@ local schemadb_util = import './schemadb.libsonnet';
 
   getRefName(ref): std.reverse(std.split(ref, '/'))[0],
 
+  //parseSchema(key, schema, currentSchema, schemaDB={}, parents=[]):
+  //  if std.isBoolean(schema)
+  //  then { [key]+: schema }
+  //  else if !std.isObject(schema)
+  //  then error 'Schema is not an object or boolean'
+  //  else
+  //    local resolved =
+  //      if '$ref' in schema
+  //      then
+  //        this.resolveRef(
+  //          schema['$ref'],
+  //          currentSchema,
+  //          schemaDB
+  //        )
+  //      else {};
+
+  //    local currentResolved =
+  //      std.get(
+  //        resolved,
+  //        '_currentSchema',
+  //        currentSchema,
+  //        true
+  //      );
+  //    local merged = std.mergePatch(schema, resolved);
+  //    local parsed = [
+  //      'properties',
+  //      'items',
+  //      'then',
+  //      'else',
+  //      'prefixItems',
+  //      'allOf',
+  //      'anyOf',
+  //      'oneOf',
+  //    ];
+  //    {
+  //      [key]+: {
+  //        [k]+: merged[k]
+  //        for k in std.objectFields(merged)
+  //        if !std.member(parsed, k)
+  //      },
+  //    }
+  //    + this._parseSchema(key, schema, currentSchema, schemaDB, parents)
+  //    + (
+  //      if '$ref' in schema
+  //      then this._parseSchema(key, resolved, currentResolved, schemaDB, parents)
+  //      else {}
+  //    )
+  //    + { [key]+: { _parents: parents } }
+  //,
+  // foldEnd
+
+
   parseSchema(key, schema, currentSchema, schemaDB={}, parents=[]):
     // foldStart
     if std.isBoolean(schema)
