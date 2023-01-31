@@ -8,7 +8,7 @@
       function(p, acc)
         if p == name
         then acc
-        else p + '+: { ' + acc + ' }',
+        else '"' + p + '"+: { ' + acc + ' }',
       parents,
       object
     ),
@@ -34,7 +34,11 @@
                      then '"%s"' % schema.default
                      else schema.default)
        else ''),
-      this.nestInParents(schema._name, schema._parents, schema._name + ': value'),
+      this.nestInParents(
+        schema._name,
+        schema._parents,
+        '"%s": value' % schema._name
+      ),
     ],
 
   withConstant(schema)::
@@ -42,7 +46,11 @@
       %s(): { %s },
     ||| % [
       this.functionName(schema._name),
-      this.nestInParents(schema._name, schema._parents, schema._name + ": '" + schema.const + "'"),
+      this.nestInParents(
+        schema._name,
+        schema._parents,
+        '"%s": "%s"' % [schema._name, schema.const]
+      ),
     ],
 
   withBoolean(schema)::
@@ -53,7 +61,11 @@
       (if 'default' in schema
        then schema.default
        else 'true'),
-      this.nestInParents(schema._name, schema._parents, schema._name + ': value'),
+      this.nestInParents(
+        schema._name,
+        schema._parents,
+        '"%s": value' % schema._name
+      ),
     ],
 
   mixinFunction(schema)::
@@ -61,7 +73,11 @@
       %sMixin(value): { %s },
     ||| % [
       this.functionName(schema._name),
-      this.nestInParents(schema._name, schema._parents, schema._name + '+: value'),
+      this.nestInParents(
+        schema._name,
+        schema._parents,
+        '"%s"+: value' % schema._name
+      ),
     ],
 
   arrayFunctions(schema)::
@@ -73,19 +89,19 @@
       this.nestInParents(
         schema._name,
         schema._parents,
-        ' %s: if std.isArray(value) then value else [value] ' % schema._name,
+        ' "%s": if std.isArray(value) then value else [value] ' % schema._name,
       ),
       this.functionName(schema._name),
       this.nestInParents(
         schema._name,
         schema._parents,
-        ' %s+: if std.isArray(value) then value else [value] ' % schema._name,
+        ' "%s"+: if std.isArray(value) then value else [value] ' % schema._name,
       ),
     ],
 
   named(name, object)::
     |||
-      %s+: %s,
+      "%s"+: %s,
     ||| % [
       name,
       object,
