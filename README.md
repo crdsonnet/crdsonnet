@@ -3,8 +3,8 @@
 Generate a *runtime* Jsonnet library directly from JSON Schemas, CRDs or OpenAPI
 components.
 
-> This project has moved from POC to an alpha status. I consider it in a usable state for
-> production projects however there are no guarantees for a stable API.
+> This project has moved from POC to an alpha status. It can be consider it in a usable
+> state for production projects however there are no guarantees for a stable API.
 
 ## Install
 
@@ -105,3 +105,20 @@ d.render(example)
 ```console
 jsonnet -J vendor -S -c -m docs docs.libsonnet
 ```
+
+## Development
+
+This project is marked as alpha status. It can be consider it in a usable state for
+production projects however there are no guarantees for a stable API.
+
+### Testing
+
+There are unit tests under `test/`, these can be run with `make test`, please make sure
+these succeed. When changing test cases, then please follow test-driven development and
+modify the test cases in separate commits that come before functional changes.
+
+### Documentation
+
+The code hasn't been documented yet, the aim is to primarily document the functions in
+`main.libsonnet` as an entry point to the lib. Other files/functions are currently
+considered 'internal' and might change without notice.
