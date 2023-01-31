@@ -27,6 +27,14 @@ local schemadb_util = import './schemadb.libsonnet';
         )
         else schema;
 
+      local current =
+        std.get(
+          schemaToParse,
+          '_currentSchema',
+          currentSchema,
+          true
+        );
+
       // shortcut to make it more readable below
       // requires the parseSchema* functions to have the same signature
       local parse(k, f) =
@@ -35,7 +43,7 @@ local schemadb_util = import './schemadb.libsonnet';
            local parsed = f(
              key,
              schemaToParse[k],
-             currentSchema,
+             current,
              schemaDB,
              parents,
            );
@@ -154,11 +162,21 @@ local schemadb_util = import './schemadb.libsonnet';
       then
         local baseURI = std.join('/', std.splitLimit(ref, '/', 5)[0:3]);
         local path = '/' + std.join('/', std.splitLimit(ref, '/', 5)[3:]);
-        if std.member(ref, '#')
-        // Absolute URI with fragment
-        then getFragment(baseURI, path)
-        // Absolute URI
-        else schemadb_util.get(schemaDB, baseURI + path)
+        (
+          if std.member(ref, '#')
+          // Absolute URI with fragment
+          then getFragment(baseURI, path)
+          // Absolute URI
+          else schemadb_util.get(schemaDB, baseURI + path)
+        )
+        + {
+          local rootSchemaRef =
+            if std.member(ref, '#')
+            then std.splitLimit(ref, '#', 1)[0]
+            else ref,
+          _currentSchema:: schemadb_util.get(schemaDB, rootSchemaRef),
+        }
+
 
       // Relative reference
       else if std.startsWith(ref, '/')
