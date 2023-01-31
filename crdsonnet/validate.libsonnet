@@ -259,8 +259,11 @@ local schemaDB = import './schemadb.libsonnet';
 
     array: {
       // foldStart
-      minItems(object, schema): std.length(object) >= schema.minItems,
-      maxItems(object, schema): std.length(object) <= schema.maxItems,
+      minItems(object, schema):
+        std.length(object) >= schema.minItems,
+
+      maxItems(object, schema):
+        std.length(object) <= schema.maxItems,
 
       uniqueItems(object, schema):
         local f = function(x) std.md5(std.manifestJson(x));
@@ -320,7 +323,35 @@ local schemaDB = import './schemadb.libsonnet';
         ]),
 
       unevaluatedItems(object, schema):
-        root.notImplemented('unevaluatedItems', schema),
+        if 'items' in schema
+        then true
+        else
+          local getSubschemas(schema) =
+            local currentSchemas = [
+              schema
+              for keyword in ['allOf', 'anyOf', 'oneOf']
+              if keyword in schema
+            ];
+            currentSchemas
+            + [
+              getSubschemas(subschema)
+              for subschema in currentSchemas
+            ]
+          ;
+
+          local longestPrefixItemsLength = std.reverse(std.set([
+            std.length(subschema.prefixItems)
+            for subschema in [schema] + getSubschemas(schema)
+            if 'prefixItems' in subschema
+            if root.validate(object, schema)
+          ]))[0];
+
+
+          local unevaluated = [
+            item
+            for item in object
+          ];
+          root.notImplemented('unevaluatedItems', schema),
     },  // foldEnd
   },
 }
