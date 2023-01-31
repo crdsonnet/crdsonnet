@@ -115,7 +115,9 @@
 
       local xofParts = self.xofParts(schema { _parents: super._parents[1:] });
 
-      local parsed = properties + xofParts;
+      local parsed =
+        properties
+        + xofParts;
 
       self.functions(schema)
       + self.nameParsed(schema, parsed),

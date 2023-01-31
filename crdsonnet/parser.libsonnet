@@ -11,6 +11,9 @@ local schemadb_util = import './schemadb.libsonnet';
 
   getRefName(ref): std.reverse(std.split(ref, '/'))[0],
 
+  getURIBase(uri): std.join('/', std.splitLimit(uri, '/', 5)[0:3]),
+  getURIPath(uri): '/' + std.join('/', std.splitLimit(uri, '/', 5)[3:]),
+
   parseSchema(key, schema, currentSchema, schemaDB={}, parents=[]):
     // foldStart
     if std.isBoolean(schema)
@@ -48,6 +51,7 @@ local schemadb_util = import './schemadb.libsonnet';
         [key]+:
           schemaToParse
           + parse('properties', this.parseSchemaMap)
+          + parse('patternProperties', this.parseSchemaMap)
           + parse('items', this.parseSchemaItems)
           + parse('then', this.parseSchemaSingle)
           + parse('else', this.parseSchemaSingle)
@@ -152,8 +156,8 @@ local schemadb_util = import './schemadb.libsonnet';
       // Absolute URI
       if std.startsWith(ref, 'https://')
       then
-        local baseURI = std.join('/', std.splitLimit(ref, '/', 5)[0:3]);
-        local path = '/' + std.join('/', std.splitLimit(ref, '/', 5)[3:]);
+        local baseURI = self.getURIBase(ref);
+        local path = self.getURIPath(ref);
         if std.member(ref, '#')
         // Absolute URI with fragment
         then getFragment(baseURI, path)
@@ -163,7 +167,7 @@ local schemadb_util = import './schemadb.libsonnet';
       // Relative reference
       else if std.startsWith(ref, '/')
       then
-        local baseURI = std.join('/', std.splitLimit(this.getID(currentSchema), '/', 5)[0:3]);
+        local baseURI = self.getURIBase(this.getID(currentSchema));
         if std.member(ref, '#')
         // Relative reference with fragment
         then getFragment(baseURI, ref)

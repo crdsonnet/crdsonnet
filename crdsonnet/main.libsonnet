@@ -5,6 +5,14 @@ local renders = import './render.libsonnet';
 local defaultRender = 'dynamic';
 
 {
+  parse(name, schema, schemaDB={}):
+    parser.parseSchema(
+      name,
+      schema,
+      schema,
+      schemaDB
+    ) + { [name]+: { _name: name } },
+
   fromSchema(name, schema, schemaDB={}, render=defaultRender):
     // foldStart
     if name == ''
