@@ -36,7 +36,14 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
           'value',
           (if 'type' in schema
            then schema.type
-           else 'string')
+           else 'string'),
+          (if 'const' in schema
+           then schema.const
+           else if 'default' in schema
+           then schema.default
+           else if 'enum' in schema
+           then 'enum[%s]' % std.join(',', [std.toString(x) for x in schema.enum])
+           else null)
         )]
       ),
   },
