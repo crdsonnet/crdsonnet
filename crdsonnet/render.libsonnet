@@ -97,7 +97,10 @@
 
     const(schema): r.withConstant(schema),
 
-    boolean(schema): r.withBoolean(schema),
+    boolean(schema):
+      if '_name' in schema
+      then r.withBoolean(schema)
+      else r.nilvalue,
 
     other(schema):
       // foldStart
