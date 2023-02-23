@@ -32,19 +32,30 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
         help=(if 'description' in schema
               then schema.description
               else ''),
-        args=[d.arg(
-          'value',
-          (if 'type' in schema
-           then schema.type
-           else 'string'),
-          (if 'const' in schema
-           then schema.const
-           else if 'default' in schema
-           then schema.default
-           else if 'enum' in schema
-           then 'enum[%s]' % std.join(',', [std.toString(x) for x in schema.enum])
-           else null)
-        )]
+        args=(
+          if 'const' in schema
+          then []
+          else [
+            d.arg(
+              'value',
+              type=(
+                if 'type' in schema
+                then schema.type
+                else 'string'
+              ),
+              default=(
+                if 'default' in schema
+                then schema.default
+                else null
+              ),
+              enums=(
+                if 'enum' in schema
+                then schema.enum
+                else null
+              )
+            ),
+          ]
+        )
       ),
   },
 
