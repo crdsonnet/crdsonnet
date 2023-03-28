@@ -83,14 +83,24 @@
             r.nilvalue
           )
         else r.nilvalue;
-      handle(schema, 'allOf')
-      + handle(schema, 'anyOf')
-      + handle(schema, 'oneOf'),
+      {
+        allOf: handle(schema, 'allOf'),
+        anyOf: handle(schema, 'anyOf'),
+        oneOf: handle(schema, 'oneOf'),
+
+        combined:
+          handle(schema, 'allOf')
+          + handle(schema, 'anyOf')
+          + handle(schema, 'oneOf'),
+      },
     // foldEnd
 
     const(schema): r.withConstant(schema),
 
-    boolean(schema): r.withBoolean(schema),
+    boolean(schema):
+      if '_name' in schema
+      then r.withBoolean(schema)
+      else r.nilvalue,
 
     other(schema):
       // foldStart
@@ -115,9 +125,24 @@
 
       local xofParts = self.xofParts(schema { _parents: super._parents[1:] });
 
+      local merge(parts) =
+        std.foldl(
+          function(acc, k)
+            acc +
+            (if std.isObject(parts[k])
+             then parts[k]
+             else {}),
+          std.objectFields(parts),
+          {}
+        );
+
+      // Merge allOf/anyOf as they can be used in combination with each other
+      // Keep oneOf seperate as it they would not be used in combination with each other
       local parsed =
-        properties
-        + xofParts;
+        merge(xofParts.allOf)
+        + merge(xofParts.anyOf)
+        + xofParts.oneOf
+        + properties;
 
       self.functions(schema)
       + self.nameParsed(schema, parsed),
@@ -138,7 +163,7 @@
 
     xof(schema):
       // foldStart
-      local parsed = self.xofParts(schema);
+      local parsed = self.xofParts(schema).combined;
       self.functions(schema)
       + self.nameParsed(schema, parsed),
     // foldEnd
