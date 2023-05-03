@@ -9,7 +9,7 @@ components.
 ## Install
 
 ```console
-jb install https://github.com/Duologic/crdsonnet/crdsonnet
+jb install https://github.com/crdsonnet/crdsonnet/crdsonnet
 ```
 
 ## Usage
@@ -18,7 +18,7 @@ Generate a library from a CustomResourceDefinition:
 
 ```jsonnet
 // main.libsonnet
-local crdsonnet = import 'github.com/Duologic/crdsonnet/crdsonnet/main.libsonnet';
+local crdsonnet = import 'github.com/crdsonnet/crdsonnet/crdsonnet/main.libsonnet';
 
 crdsonnet.fromCRD(
   someCustomResourceDefinition,
@@ -46,7 +46,7 @@ To do this, first set the `render` to 'static':
 
 ```jsonnet
 // static.libsonnet
-local crdsonnet = import 'github.com/Duologic/crdsonnet/crdsonnet/main.libsonnet';
+local crdsonnet = import 'github.com/crdsonnet/crdsonnet/crdsonnet/main.libsonnet';
 
 local example =
   crdsonnet.fromCRD(
