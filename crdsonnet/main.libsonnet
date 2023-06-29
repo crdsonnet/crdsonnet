@@ -1,8 +1,8 @@
 local helpers = import './helpers.libsonnet';
 local parser = import './parser.libsonnet';
-local renders = import './render.libsonnet';
+local render = import './render.libsonnet';
 
-local defaultRender = 'dynamic';
+local defaultRenderEngine = 'dynamic';
 
 {
   parse(name, schema, schemaDB={}):
@@ -13,21 +13,43 @@ local defaultRender = 'dynamic';
       schemaDB
     ) + { [name]+: { _name: name } },
 
-  fromSchema(name, schema, schemaDB={}, render=defaultRender):
+  schema: {
+    new(name, schema): {
+      local this = self,
+      name: name,
+      schema: schema,
+      schemaDB: {},
+      renderEngine: render.new('dynamic'),
+
+      parsedSchema: parser.parseSchema(
+        self.name,
+        self.schema,
+        self.schema,
+        self.schemaDB
+      ) + { [self.name]+: { _name: this.name } },
+
+      render: self.renderEngine.render(self.parsedSchema[self.name]),
+    },
+    withSchemaDB(db): {
+      schemaDB: db,
+    },
+    withRenderEngine(engine): {
+      renderEngine: render.new(engine),
+    },
+  },
+
+  fromSchema(name, schema, schemaDB={}, renderEngine=defaultRenderEngine):
     // foldStart
     if name == ''
     then error "name can't be an empty string"
-    else
-      local parsed = parser.parseSchema(
-        name,
-        schema,
-        schema,
-        schemaDB
-      ) + { [name]+: { _name: name } };
-      renders[render].render(parsed[name]),
+    else (
+      self.schema.new(name, schema)
+      + self.schema.withSchemaDB(schemaDB)
+      + self.schema.withRenderEngine(renderEngine)
+    ).render,
   // foldEnd
 
-  fromCRD(definition, groupSuffix, schemaDB={}, render=defaultRender):
+  fromCRD(definition, groupSuffix, schemaDB={}, renderEngine=defaultRenderEngine):
     // foldStart
     local grouping = helpers.getGroupKey(definition.spec.group, groupSuffix);
     local name = helpers.camelCaseKind(definition.spec.names.kind);
@@ -58,27 +80,27 @@ local defaultRender = 'dynamic';
     local output = std.foldl(
       function(acc, version)
         acc
-        + renders[render].toObject(
-          renders[render].nestInParents(
+        + render.new(renderEngine).toObject(
+          render.new(renderEngine).nestInParents(
             [grouping, version._name],
-            renders[render].schema(
+            render.new(renderEngine).schema(
               version[name]
             )
           )
         )
-        + renders[render].newFunction(
+        + render.new(renderEngine).newFunction(
           [grouping, version._name, name]
         )
       ,
       parsedVersions,
-      renders[render].nilvalue,
+      render.new(renderEngine).nilvalue,
     );
 
     output,
   // foldEnd
 
   // XRD: Crossplane CompositeResourceDefinition
-  fromXRD(definition, groupSuffix, schemaDB={}, render=defaultRender):
+  fromXRD(definition, groupSuffix, schemaDB={}, renderEngine=defaultRenderEngine):
     // foldStart
     local grouping = helpers.getGroupKey(definition.spec.group, groupSuffix);
 
@@ -116,26 +138,26 @@ local defaultRender = 'dynamic';
     local output = std.foldl(
       function(acc, version)
         acc
-        + renders[render].toObject(
-          renders[render].nestInParents(
+        + render.new(renderEngine).toObject(
+          render.new(renderEngine).nestInParents(
             [grouping, version._name],
-            renders[render].schema(
+            render.new(renderEngine).schema(
               version[name]
             )
           )
         )
-        + renders[render].newFunction(
+        + render.new(renderEngine).newFunction(
           [grouping, version._name, name]
         )
       ,
       parsedVersions,
-      renders[render].nilvalue,
+      render.new(renderEngine).nilvalue,
     );
 
     output,
   // foldEnd
 
-  fromOpenAPI(name, component, schema, schemaDB={}, render=defaultRender):
+  fromOpenAPI(name, component, schema, schemaDB={}, renderEngine=defaultRenderEngine):
     // foldStart
     if name == ''
     then error "name can't be an empty string"
@@ -156,14 +178,14 @@ local defaultRender = 'dynamic';
         schemaDB
       ) + { [name]+: { _name: name } };
 
-      renders[render].render(parsed[name])
+      render.new(renderEngine).render(parsed[name])
       + (if 'x-kubernetes-group-version-kind' in component
-         then renders[render].newFunction([name])
-         else renders[render].nilvalue),
+         then render.new(renderEngine).newFunction([name])
+         else render.new(renderEngine).nilvalue),
   // foldEnd
 
   // expects schema as rendered by `kubectl get --raw /openapi/v2`
-  fromKubernetesOpenAPI(schema, render=defaultRender):
+  fromKubernetesOpenAPI(schema, renderEngine=defaultRenderEngine):
     // foldStart
     std.foldl(
       function(acc, d)
@@ -186,17 +208,17 @@ local defaultRender = 'dynamic';
         ) + { [name]+: { _name: name } };
 
         acc
-        + renders[render].toObject(
-          renders[render].nestInParents(
+        + render.new(renderEngine).toObject(
+          render.new(renderEngine).nestInParents(
             [items[2], items[1]],
-            renders[render].schema(parsed[name])
+            render.new(renderEngine).schema(parsed[name])
           )
         )
         + (if 'x-kubernetes-group-version-kind' in component
-           then renders[render].newFunction([items[2], items[1], name])
-           else renders[render].nilvalue),
+           then render.new(renderEngine).newFunction([items[2], items[1], name])
+           else render.new(renderEngine).nilvalue),
       std.objectFields(schema.definitions),
-      renders[render].nilvalue
+      render.new(renderEngine).nilvalue
     ),
   // foldEnd
 }
