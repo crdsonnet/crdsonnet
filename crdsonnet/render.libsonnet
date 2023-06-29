@@ -173,6 +173,19 @@
       + self.nameParsed(schema, parsed),
     // foldEnd
   },
+  withValidation(): {
+    engine+: {
+      validate(schema, value)::
+        local validate = import 'github.com/Duologic/validate-libsonnet/main.libsonnet';
+        validate.checkParameters({
+          [schema._name]:
+            validate.schemaCheck(
+              value,
+              schema
+            ),
+        }),
+    },
+  },
 }
 
 // vim: foldmethod=marker foldmarker=foldStart,foldEnd foldlevel=0

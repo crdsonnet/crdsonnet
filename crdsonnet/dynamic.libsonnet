@@ -4,6 +4,8 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
 
   nilvalue:: {},
 
+  validate(schema, value):: true,
+
   nestInParents(name, parents, object)::
     std.foldr(
       function(p, acc)
@@ -64,10 +66,12 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
     + (if 'default' in schema
        then {
          [this.functionName(schema._name)](value=schema.default):
+           assert this.validate(schema, value);
            this.nestInParents(schema._name, schema._parents, { [schema._name]: value }),
        }
        else {
          [this.functionName(schema._name)](value):
+           assert this.validate(schema, value);
            this.nestInParents(schema._name, schema._parents, { [schema._name]: value }),
        }),
 
@@ -82,6 +86,7 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
     this.functionHelp(this.functionName(schema._name), schema)
     + {
       [this.functionName(schema._name)](value=true):
+        assert this.validate(schema, value);
         this.nestInParents(schema._name, schema._parents, { [schema._name]: value }),
     },
 
@@ -89,6 +94,7 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
     this.functionHelp(this.functionName(schema._name) + 'Mixin', schema)
     + {
       [this.functionName(schema._name) + 'Mixin'](value):
+        assert this.validate(schema, value);
         this.nestInParents(schema._name, schema._parents, { [schema._name]+: value }),
     },
 
@@ -97,6 +103,7 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
     + this.functionHelp(this.functionName(schema._name) + 'Mixin', schema)
     + {
       [this.functionName(schema._name)](value):
+        assert this.validate(schema, value);
         this.nestInParents(
           schema._name,
           schema._parents,
@@ -104,6 +111,7 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
         ),
 
       [this.functionName(schema._name) + 'Mixin'](value):
+        assert this.validate(schema, value);
         this.nestInParents(
           schema._name,
           schema._parents,

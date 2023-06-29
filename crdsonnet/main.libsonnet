@@ -36,6 +36,9 @@ local defaultRenderEngine = 'dynamic';
     withRenderEngine(engine): {
       renderEngine: render.new(engine),
     },
+    withVaidation(): {
+      renderEngine+: render.withValidation(),
+    },
   },
 
   fromSchema(name, schema, schemaDB={}, renderEngine=defaultRenderEngine):
