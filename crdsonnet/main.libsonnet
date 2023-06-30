@@ -118,7 +118,7 @@ local defaultRenderEngine = 'dynamic';
   // XRDs are very similar to CRDs, processing them requires slightly different behavior.
   xrd:
     self.crds
-    {
+    + {
       getKind(definition):
         if std.objectHas(definition.spec, 'claimNames')
         then definition.spec.claimNames.kind

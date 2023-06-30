@@ -8,3 +8,7 @@ test:
 		RESULT=$$(($$RESULT + $$?)); \
 	done; \
 	exit $$RESULT
+
+.PHONY: fmt
+fmt:
+	jsonnetfmt -i --no-use-implicit-plus */*sonnet
