@@ -14,7 +14,7 @@ local schemadb_util = import './schemadb.libsonnet';
   getURIBase(uri): std.join('/', std.splitLimit(uri, '/', 5)[0:3]),
   getURIPath(uri): '/' + std.join('/', std.splitLimit(uri, '/', 5)[3:]),
 
-  parseSchema(key, schema, currentSchema, schemaDB={}, parents=[]):
+  parseSchema(key, schema, currentSchema=schema, schemaDB={}, parents=[]):
     // foldStart
     if std.isBoolean(schema)
     then { [key]+: schema }

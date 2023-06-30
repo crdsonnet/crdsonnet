@@ -72,25 +72,53 @@ local db =
   })
 ;
 
-local schema = db['https://example.com/schemas/customer'];
-local library = crdsonnet.fromSchema('customer', schema, db);
-
 test.new(std.thisFile)
-+ test.case.new(
-  name='fromSchema smoke test',
-  test=test.expect.eq(
-    actual=
-    library.customer.withFirstName('John')
-    + library.customer.withLastName('Doe')
-    + library.customer.shipping_address.withStreetAddress('4B Main Street')
-    + library.customer.shipping_address.withCountry(),
-    expected={
-      first_name: 'John',
-      last_name: 'Doe',
-      shipping_address: {
-        street_address: '4B Main Street',
-        country: 'United States of America',
-      },
-    }
++ (
+  local schema = db['https://example.com/schemas/customer'];
+  local library = crdsonnet.fromSchema('customer', schema, db);
+
+  test.case.new(
+    name='fromSchema smoke test',
+    test=test.expect.eq(
+      actual=
+      library.customer.withFirstName('John')
+      + library.customer.withLastName('Doe')
+      + library.customer.shipping_address.withStreetAddress('4B Main Street')
+      + library.customer.shipping_address.withCountry(),
+      expected={
+        first_name: 'John',
+        last_name: 'Doe',
+        shipping_address: {
+          street_address: '4B Main Street',
+          country: 'United States of America',
+        },
+      }
+    )
+  )
+)
++ (
+  local schema = db['https://example.com/schemas/customer'];
+  local library = (
+    crdsonnet.schema.new('customer', schema)
+    + crdsonnet.schema.withSchemaDB(db)
+  ).library;
+
+  test.case.new(
+    name='schema.new smoke test',
+    test=test.expect.eq(
+      actual=
+      library.customer.withFirstName('John')
+      + library.customer.withLastName('Doe')
+      + library.customer.shipping_address.withStreetAddress('4B Main Street')
+      + library.customer.shipping_address.withCountry(),
+      expected={
+        first_name: 'John',
+        last_name: 'Doe',
+        shipping_address: {
+          street_address: '4B Main Street',
+          country: 'United States of America',
+        },
+      }
+    )
   )
 )
