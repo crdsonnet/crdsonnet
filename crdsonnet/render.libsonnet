@@ -1,8 +1,13 @@
 {
-  static: self.new(import 'static.libsonnet'),
-  dynamic: self.new(import 'dynamic.libsonnet'),
+  local engineTypes = {
+    static: import 'static.libsonnet',
+    dynamic: import 'dynamic.libsonnet',
+  },
 
-  new(r): {
+  new(engineType): {
+    engine: engineTypes[engineType],
+    local r = self.engine,
+
     nilvalue: r.nilvalue,
     toObject: r.toObject,
     nestInParents(parents, object): r.nestInParents('', parents, object),
