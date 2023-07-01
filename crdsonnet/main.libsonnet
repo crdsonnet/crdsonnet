@@ -1,6 +1,6 @@
 local helpers = import './helpers.libsonnet';
 local parser = import './parser.libsonnet';
-local renders = import './render.libsonnet';
+local renderEngine = import './render.libsonnet';
 
 local defaultRender = 'dynamic';
 
@@ -24,7 +24,7 @@ local defaultRender = 'dynamic';
         schema,
         schemaDB
       ) + { [name]+: { _name: name } };
-      renders[render].render(parsed[name]),
+      renderEngine.new(render).render(parsed[name]),
   // foldEnd
 
   fromCRD(definition, groupSuffix, schemaDB={}, render=defaultRender):
@@ -58,20 +58,20 @@ local defaultRender = 'dynamic';
     local output = std.foldl(
       function(acc, version)
         acc
-        + renders[render].toObject(
-          renders[render].nestInParents(
+        + renderEngine.new(render).toObject(
+          renderEngine.new(render).nestInParents(
             [grouping, version._name],
-            renders[render].schema(
+            renderEngine.new(render).schema(
               version[name]
             )
           )
         )
-        + renders[render].newFunction(
+        + renderEngine.new(render).newFunction(
           [grouping, version._name, name]
         )
       ,
       parsedVersions,
-      renders[render].nilvalue,
+      renderEngine.new(render).nilvalue,
     );
 
     output,
@@ -116,20 +116,20 @@ local defaultRender = 'dynamic';
     local output = std.foldl(
       function(acc, version)
         acc
-        + renders[render].toObject(
-          renders[render].nestInParents(
+        + renderEngine.new(render).toObject(
+          renderEngine.new(render).nestInParents(
             [grouping, version._name],
-            renders[render].schema(
+            renderEngine.new(render).schema(
               version[name]
             )
           )
         )
-        + renders[render].newFunction(
+        + renderEngine.new(render).newFunction(
           [grouping, version._name, name]
         )
       ,
       parsedVersions,
-      renders[render].nilvalue,
+      renderEngine.new(render).nilvalue,
     );
 
     output,
@@ -156,10 +156,10 @@ local defaultRender = 'dynamic';
         schemaDB
       ) + { [name]+: { _name: name } };
 
-      renders[render].render(parsed[name])
+      renderEngine.new(render).render(parsed[name])
       + (if 'x-kubernetes-group-version-kind' in component
-         then renders[render].newFunction([name])
-         else renders[render].nilvalue),
+         then renderEngine.new(render).newFunction([name])
+         else renderEngine.new(render).nilvalue),
   // foldEnd
 
   // expects schema as rendered by `kubectl get --raw /openapi/v2`
@@ -186,17 +186,17 @@ local defaultRender = 'dynamic';
         ) + { [name]+: { _name: name } };
 
         acc
-        + renders[render].toObject(
-          renders[render].nestInParents(
+        + renderEngine.new(render).toObject(
+          renderEngine.new(render).nestInParents(
             [items[2], items[1]],
-            renders[render].schema(parsed[name])
+            renderEngine.new(render).schema(parsed[name])
           )
         )
         + (if 'x-kubernetes-group-version-kind' in component
-           then renders[render].newFunction([items[2], items[1], name])
-           else renders[render].nilvalue),
+           then renderEngine.new(render).newFunction([items[2], items[1], name])
+           else renderEngine.new(render).nilvalue),
       std.objectFields(schema.definitions),
-      renders[render].nilvalue
+      renderEngine.new(render).nilvalue
     ),
   // foldEnd
 }
