@@ -5,135 +5,125 @@ local renderEngine = import './render.libsonnet';
 local defaultRender = 'dynamic';
 
 {
-  parse(name, schema, schemaDB={}):
-    parser.parseSchema(
+  local root = self,
+
+  schemadb: import './schemadb.libsonnet',
+
+  processor: {
+    new(): {
+      schemaDB: {},
+      renderEngine: renderEngine.new('dynamic'),
+      parse(name, schema):
+        parser.parseSchema(
+          name,
+          schema,
+          schema,
+          self.schemaDB
+        ) + { [name]+: { _name: name } },
+      render(name, schema):
+        local parsedSchema = self.parse(name, schema);
+        self.renderEngine.render(parsedSchema[name]),
+    },
+    withSchemaDB(db): {
+      schemaDB+: db,
+    },
+    withRenderEngine(engine): {
+      renderEngine: engine,
+    },
+    withRenderEngineType(engineType): {
+      renderEngine: renderEngine.new(engineType),
+    },
+  },
+
+  schema: {
+    render(
       name,
       schema,
-      schema,
-      schemaDB
-    ) + { [name]+: { _name: name } },
+      processor=root.processor.new(),
+    ):
+      processor.render(name, schema),
+  },
+
+  crd: {
+    local this = self,
+    render(
+      definition,
+      groupSuffix,
+      processor=root.processor.new(),
+    ):
+      local _processor =
+        processor
+        + root.processor.withSchemaDB(helpers.metadataRefSchemaDB);
+      local renderEngine = _processor.renderEngine;
+      local grouping = helpers.getGroupKey(definition.spec.group, groupSuffix);
+      local name = helpers.camelCaseKind(this.getKind(definition));
+      std.foldl(
+        function(acc, version)
+          local schema = this.getSchemaForVersion(definition, version);
+          acc
+          + renderEngine.toObject(
+            renderEngine.nestInParents(
+              [grouping, version.name],
+              _processor.render(name, schema)
+            )
+          )
+          + renderEngine.newFunction(
+            [grouping, version.name, name]
+          )
+        ,
+        definition.spec.versions,
+        renderEngine.nilvalue,
+      ),
+    getKind(definition):
+      definition.spec.names.kind,
+    getSchemaForVersion(definition, version):
+      version.schema.openAPIV3Schema
+      + helpers.properties.withMetadataRef()
+      + helpers.properties.withGroupVersionKind(
+        definition.spec.group,
+        version.name,
+        this.getKind(definition)
+      ),
+  },
+
+  // XRD: Crossplane CompositeResourceDefinition
+  // XRDs are very similar to CRDs, processing them requires slightly different behavior.
+  xrd:
+    self.crds
+    + {
+      getKind(definition):
+        if std.objectHas(definition.spec, 'claimNames')
+        then definition.spec.claimNames.kind
+        else definition.spec.names.kind,
+      getSchemaForVersion(definition, version):
+        super.getSchemaForVersion(definition, version)
+        + helpers.properties.withCompositeResource(),
+    },
 
   fromSchema(name, schema, schemaDB={}, render=defaultRender):
-    // foldStart
     if name == ''
     then error "name can't be an empty string"
     else
-      local parsed = parser.parseSchema(
-        name,
-        schema,
-        schema,
-        schemaDB
-      ) + { [name]+: { _name: name } };
-      renderEngine.new(render).render(parsed[name]),
-  // foldEnd
+      local processor =
+        self.processor.new()
+        + self.processor.withSchemaDB(schemaDB)
+        + self.processor.withRenderEngineType(render);
+      self.schema.render(name, schema, processor),
 
   fromCRD(definition, groupSuffix, schemaDB={}, render=defaultRender):
-    // foldStart
-    local grouping = helpers.getGroupKey(definition.spec.group, groupSuffix);
-    local name = helpers.camelCaseKind(definition.spec.names.kind);
-
-    local parsedVersions = [
-      local schema =
-        version.schema.openAPIV3Schema
-        + helpers.properties.withMetadataRef()
-        + helpers.properties.withGroupVersionKind(
-          definition.spec.group,
-          version.name,
-          definition.spec.names.kind,
-        );
-
-      parser.parseSchema(
-        name,
-        schema,
-        schema,
-        schemaDB + helpers.metadataRefSchemaDB
-      )
-      + {
-        [name]+: { _name: name },
-        _name: version.name,
-      }
-      for version in definition.spec.versions
-    ];
-
-    local output = std.foldl(
-      function(acc, version)
-        acc
-        + renderEngine.new(render).toObject(
-          renderEngine.new(render).nestInParents(
-            [grouping, version._name],
-            renderEngine.new(render).schema(
-              version[name]
-            )
-          )
-        )
-        + renderEngine.new(render).newFunction(
-          [grouping, version._name, name]
-        )
-      ,
-      parsedVersions,
-      renderEngine.new(render).nilvalue,
-    );
-
-    output,
-  // foldEnd
+    local processor =
+      self.processor.new()
+      + self.processor.withSchemaDB(schemaDB)
+      + self.processor.withRenderEngineType(render);
+    self.crd.render(definition, groupSuffix, processor),
 
   // XRD: Crossplane CompositeResourceDefinition
   fromXRD(definition, groupSuffix, schemaDB={}, render=defaultRender):
-    // foldStart
-    local grouping = helpers.getGroupKey(definition.spec.group, groupSuffix);
-
-    local kind =
-      if std.objectHas(definition.spec, 'claimNames')
-      then definition.spec.claimNames.kind
-      else definition.spec.names.kind;
-
-    local name = helpers.camelCaseKind(kind);
-
-    local parsedVersions = [
-      local schema =
-        version.schema.openAPIV3Schema
-        + helpers.properties.withCompositeResource()
-        + helpers.properties.withMetadataRef()
-        + helpers.properties.withGroupVersionKind(
-          definition.spec.group,
-          version.name,
-          kind,
-        );
-
-      parser.parseSchema(
-        name,
-        schema,
-        schema,
-        schemaDB + helpers.metadataRefSchemaDB
-      )
-      + {
-        [name]+: { _name: name },
-        _name: version.name,
-      }
-      for version in definition.spec.versions
-    ];
-
-    local output = std.foldl(
-      function(acc, version)
-        acc
-        + renderEngine.new(render).toObject(
-          renderEngine.new(render).nestInParents(
-            [grouping, version._name],
-            renderEngine.new(render).schema(
-              version[name]
-            )
-          )
-        )
-        + renderEngine.new(render).newFunction(
-          [grouping, version._name, name]
-        )
-      ,
-      parsedVersions,
-      renderEngine.new(render).nilvalue,
-    );
-
-    output,
-  // foldEnd
+    local processor =
+      self.processor.new()
+      + self.processor.withSchemaDB(schemaDB)
+      + self.processor.withRenderEngineType(render);
+    self.xrd.render(definition, groupSuffix, processor),
 
   fromOpenAPI(name, component, schema, schemaDB={}, render=defaultRender):
     // foldStart
@@ -200,5 +190,3 @@ local defaultRender = 'dynamic';
     ),
   // foldEnd
 }
-
-// vim: foldmethod=marker foldmarker=foldStart,foldEnd foldlevel=0
