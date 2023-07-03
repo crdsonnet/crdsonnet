@@ -8,3 +8,10 @@ test:
 		RESULT=$$(($$RESULT + $$?)); \
 	done; \
 	exit $$RESULT
+
+.PHONY: docs
+docs:
+	jsonnet \
+		-J crdsonnet/vendor \
+		-S -c -m docs \
+		-e '(import "github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet").render(import "crdsonnet/main.libsonnet")'
