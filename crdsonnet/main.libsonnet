@@ -101,7 +101,7 @@ local defaultRender = 'dynamic';
     },
 
   openapi: {
-    process(
+    render(
       name,
       component,
       schema,
@@ -161,7 +161,7 @@ local defaultRender = 'dynamic';
         self.processor.new()
         + self.processor.withSchemaDB(schemaDB)
         + self.processor.withRenderEngineType(render);
-      self.openapi.process(name, component, schema, processor),
+      self.openapi.render(name, component, schema, processor),
 
   // expects schema as rendered by `kubectl get --raw /openapi/v2`
   fromKubernetesOpenAPI(schema, render=defaultRender):
