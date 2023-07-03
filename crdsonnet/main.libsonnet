@@ -1,59 +1,40 @@
 local helpers = import './helpers.libsonnet';
-local parser = import './parser.libsonnet';
-local renderEngine = import './render.libsonnet';
-
-local defaultRender = 'dynamic';
+local processor = import './processor.libsonnet';
+local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
 
 {
-  local root = self,
+  '#': d.package.new(
+    'crdsonnet',
+    'https://github.com/crdsonnet/crdsonnet/crdsonnet',
+    'Generate a *runtime* Jsonnet library directly from JSON Schemas, CRDs or OpenAPI components.',
+    std.thisFile,
+    'master',
+  ),
 
-  schemadb: import './schemadb.libsonnet',
-
-  processor: {
-    new(): {
-      schemaDB: {},
-      renderEngine: renderEngine.new('dynamic'),
-      parse(name, schema):
-        parser.parseSchema(
-          name,
-          schema,
-          schema,
-          self.schemaDB
-        ) + { [name]+: { _name: name } },
-      render(name, schema):
-        local parsedSchema = self.parse(name, schema);
-        self.renderEngine.render(parsedSchema[name]),
-    },
-    withSchemaDB(db): {
-      schemaDB+: db,
-    },
-    withRenderEngine(engine): {
-      renderEngine: engine,
-    },
-    withRenderEngineType(engineType): {
-      renderEngine: renderEngine.new(engineType),
-    },
-  },
+  schemaDB: import './schemadb.libsonnet',
+  renderEngine: import './render.libsonnet',
+  processor: processor,
 
   schema: {
     render(
       name,
       schema,
-      processor=root.processor.new(),
+      processor=processor.new(),
     ):
       processor.render(name, schema),
   },
 
   crd: {
     local this = self,
+    local importedProcessor = processor,
     render(
       definition,
       groupSuffix,
-      processor=root.processor.new(),
+      processor=processor.new(),
     ):
       local _processor =
         processor
-        + root.processor.withSchemaDB(helpers.metadataRefSchemaDB);
+        + importedProcessor.withSchemaDB(helpers.metadataRefSchemaDB);
       local renderEngine = _processor.renderEngine;
       local grouping = helpers.getGroupKey(definition.spec.group, groupSuffix);
       local name = helpers.camelCaseKind(this.getKind(definition));
@@ -89,7 +70,7 @@ local defaultRender = 'dynamic';
   // XRD: Crossplane CompositeResourceDefinition
   // XRDs are very similar to CRDs, processing them requires slightly different behavior.
   xrd:
-    self.crds
+    self.crd
     + {
       getKind(definition):
         if std.objectHas(definition.spec, 'claimNames')
@@ -105,7 +86,7 @@ local defaultRender = 'dynamic';
       name,
       component,
       schema,
-      processor=root.processor.new(),
+      processor=processor.new(),
     ):
       local extendSchema =
         std.mergePatch(
@@ -128,56 +109,62 @@ local defaultRender = 'dynamic';
 // Legacy API endpoints
 // These endpoints aren't very flexible and require more arguments to add features, this is an anti-pattern. They have been reimplemented to use above modular setup as an example and to verify the modular pattern works. These functions are covered by unit tests.
 + {
+  local defaultRender = 'dynamic',
+
   fromSchema(name, schema, schemaDB={}, render=defaultRender):
     if name == ''
     then error "name can't be an empty string"
     else
-      local processor =
-        self.processor.new()
-        + self.processor.withSchemaDB(schemaDB)
-        + self.processor.withRenderEngineType(render);
-      self.schema.render(name, schema, processor),
+      local _processor =
+        processor.new()
+        + processor.withSchemaDB(schemaDB)
+        + processor.withRenderEngineType(render);
+      self.schema.render(name, schema, _processor),
 
   fromCRD(definition, groupSuffix, schemaDB={}, render=defaultRender):
-    local processor =
-      self.processor.new()
-      + self.processor.withSchemaDB(schemaDB)
-      + self.processor.withRenderEngineType(render);
-    self.crd.render(definition, groupSuffix, processor),
+    local _processor =
+      processor.new()
+      + processor.withSchemaDB(schemaDB)
+      + processor.withRenderEngineType(render);
+    self.crd.render(definition, groupSuffix, _processor),
 
   // XRD: Crossplane CompositeResourceDefinition
   fromXRD(definition, groupSuffix, schemaDB={}, render=defaultRender):
-    local processor =
-      self.processor.new()
-      + self.processor.withSchemaDB(schemaDB)
-      + self.processor.withRenderEngineType(render);
-    self.xrd.render(definition, groupSuffix, processor),
+    local _processor =
+      processor.new()
+      + processor.withSchemaDB(schemaDB)
+      + processor.withRenderEngineType(render);
+    self.xrd.render(definition, groupSuffix, _processor),
 
   fromOpenAPI(name, component, schema, schemaDB={}, render=defaultRender):
     if name == ''
     then error "name can't be an empty string"
     else
-      local processor =
-        self.processor.new()
-        + self.processor.withSchemaDB(schemaDB)
-        + self.processor.withRenderEngineType(render);
-      self.openapi.render(name, component, schema, processor),
+      local _processor =
+        processor.new()
+        + processor.withSchemaDB(schemaDB)
+        + processor.withRenderEngineType(render);
+      self.openapi.render(name, component, schema, _processor),
 
   // expects schema as rendered by `kubectl get --raw /openapi/v2`
   fromKubernetesOpenAPI(schema, render=defaultRender):
+    local _processor =
+      processor.new()
+      + processor.withRenderEngineType(render);
+    local renderEngine = _processor.renderEngine;
     std.foldl(
       function(acc, d)
         local items = std.reverse(std.split(d, '.'));
         local component = schema.definitions[d];
         local name = helpers.camelCaseKind(items[0]);
         acc
-        + renderEngine.new(render).toObject(
-          renderEngine.new(render).nestInParents(
+        + renderEngine.toObject(
+          renderEngine.nestInParents(
             [items[2], items[1]],
             self.fromOpenAPI(name, component, schema, render=render),
           )
         ),
       std.objectFields(schema.definitions),
-      renderEngine.new(render).nilvalue
+      renderEngine.nilvalue
     ),
 }
