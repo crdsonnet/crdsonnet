@@ -100,6 +100,30 @@ local defaultRender = 'dynamic';
         + helpers.properties.withCompositeResource(),
     },
 
+  openapi: {
+    process(
+      name,
+      component,
+      schema,
+      processor=root.processor.new(),
+    ):
+      local extendSchema =
+        std.mergePatch(
+          schema,
+          component
+          + (if 'x-kubernetes-group-version-kind' in component
+             then
+               // not sure why this is a list, grabbing the first item
+               local gvk = component['x-kubernetes-group-version-kind'][0];
+               helpers.properties.withGroupVersionKind(gvk.group, gvk.version, gvk.kind)
+             else {})
+        );
+      processor.render(name, extendSchema)
+      + (if 'x-kubernetes-group-version-kind' in component
+         then processor.renderEngine.newFunction([name])
+         else processor.renderEngine.nilvalue),
+  },
+
   fromSchema(name, schema, schemaDB={}, render=defaultRender):
     if name == ''
     then error "name can't be an empty string"
@@ -126,31 +150,14 @@ local defaultRender = 'dynamic';
     self.xrd.render(definition, groupSuffix, processor),
 
   fromOpenAPI(name, component, schema, schemaDB={}, render=defaultRender):
-    // foldStart
     if name == ''
     then error "name can't be an empty string"
     else
-      local extendComponent =
-        component
-        + (if 'x-kubernetes-group-version-kind' in component
-           then
-             // not sure why this is a list, grabbing the first item
-             local gvk = component['x-kubernetes-group-version-kind'][0];
-             helpers.properties.withGroupVersionKind(gvk.group, gvk.version, gvk.kind)
-           else {});
-
-      local parsed = parser.parseSchema(
-        name,
-        extendComponent,
-        schema,
-        schemaDB
-      ) + { [name]+: { _name: name } };
-
-      renderEngine.new(render).render(parsed[name])
-      + (if 'x-kubernetes-group-version-kind' in component
-         then renderEngine.new(render).newFunction([name])
-         else renderEngine.new(render).nilvalue),
-  // foldEnd
+      local processor =
+        self.processor.new()
+        + self.processor.withSchemaDB(schemaDB)
+        + self.processor.withRenderEngineType(render);
+      self.openapi.process(name, component, schema, processor),
 
   // expects schema as rendered by `kubectl get --raw /openapi/v2`
   fromKubernetesOpenAPI(schema, render=defaultRender):
@@ -159,32 +166,14 @@ local defaultRender = 'dynamic';
       function(acc, d)
         local items = std.reverse(std.split(d, '.'));
         local component = schema.definitions[d];
-        local extendComponent =
-          component
-          + (if 'x-kubernetes-group-version-kind' in component
-             then
-               // not sure why this is a list, grabbing the first item
-               local gvk = component['x-kubernetes-group-version-kind'][0];
-               helpers.properties.withGroupVersionKind(gvk.group, gvk.version, gvk.kind)
-             else {});
-
         local name = helpers.camelCaseKind(items[0]);
-        local parsed = parser.parseSchema(
-          name,
-          extendComponent,
-          schema,
-        ) + { [name]+: { _name: name } };
-
         acc
         + renderEngine.new(render).toObject(
           renderEngine.new(render).nestInParents(
             [items[2], items[1]],
-            renderEngine.new(render).schema(parsed[name])
+            self.fromOpenAPI(name, component, schema, render=render),
           )
-        )
-        + (if 'x-kubernetes-group-version-kind' in component
-           then renderEngine.new(render).newFunction([items[2], items[1], name])
-           else renderEngine.new(render).nilvalue),
+        ),
       std.objectFields(schema.definitions),
       renderEngine.new(render).nilvalue
     ),

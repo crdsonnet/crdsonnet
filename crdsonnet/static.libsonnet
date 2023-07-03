@@ -4,13 +4,17 @@
   nilvalue:: '',
 
   nestInParents(name, parents, object)::
+    local obj = std.stripChars(
+      object,
+      '{}',  // Remove curly brackets it can be nested in parents
+    );
     std.foldr(
       function(p, acc)
         if p == name
         then acc
         else '"' + p + '"+: { ' + acc + ' }',
       parents,
-      object
+      obj
     ),
 
   functionName(name)::
