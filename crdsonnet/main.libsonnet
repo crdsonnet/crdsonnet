@@ -123,7 +123,11 @@ local defaultRender = 'dynamic';
          then processor.renderEngine.newFunction([name])
          else processor.renderEngine.nilvalue),
   },
+}
 
+// Legacy API endpoints
+// These endpoints aren't very flexible and require more arguments to add features, this is an anti-pattern. They have been reimplemented to use above modular setup as an example and to verify the modular pattern works. These functions are covered by unit tests.
++ {
   fromSchema(name, schema, schemaDB={}, render=defaultRender):
     if name == ''
     then error "name can't be an empty string"
@@ -161,7 +165,6 @@ local defaultRender = 'dynamic';
 
   // expects schema as rendered by `kubectl get --raw /openapi/v2`
   fromKubernetesOpenAPI(schema, render=defaultRender):
-    // foldStart
     std.foldl(
       function(acc, d)
         local items = std.reverse(std.split(d, '.'));
@@ -177,5 +180,4 @@ local defaultRender = 'dynamic';
       std.objectFields(schema.definitions),
       renderEngine.new(render).nilvalue
     ),
-  // foldEnd
 }
