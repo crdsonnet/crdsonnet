@@ -1,10 +1,8 @@
 # CRDsonnet
 
-Generate a *runtime* Jsonnet library directly from JSON Schemas, CRDs or OpenAPI
-components.
+Generate a *runtime* Jsonnet library directly from JSON Schemas, CRDs or OpenAPI components.
 
-> This project has moved from POC to an alpha status. It can be consider it in a usable
-> state for production projects however there are no guarantees for a stable API.
+> This project has moved from POC to an alpha status. It can be consider it in a usable state for production projects however there are no guarantees for a stable API.
 
 ## Install
 
@@ -20,7 +18,7 @@ Generate a library from a CustomResourceDefinition:
 // main.libsonnet
 local crdsonnet = import 'github.com/crdsonnet/crdsonnet/crdsonnet/main.libsonnet';
 
-crdsonnet.fromCRD(
+crdsonnet.crd.render(
   someCustomResourceDefinition,
   'example.io'
 )
@@ -37,10 +35,7 @@ example.core.v1.someObject.new(name='example')
 
 ### Static rendering
 
-The library can render a static library, this can be useful when rendering them in-memory
-becomes too slow or for debugging purposes. The static rendering will represent the
-jsonnet as a string, however this kind of string manipulation is quite hard in jsonnet
-and the output can be quite ugly.
+The library can render a static library, this can be useful when rendering them in-memory becomes too slow or for debugging purposes. The static rendering will represent the jsonnet as a string, however this kind of string manipulation is quite hard in jsonnet and the output can be quite ugly.
 
 To do this, first set the `render` to 'static':
 
@@ -48,14 +43,15 @@ To do this, first set the `render` to 'static':
 // static.libsonnet
 local crdsonnet = import 'github.com/crdsonnet/crdsonnet/crdsonnet/main.libsonnet';
 
-local example =
-  crdsonnet.fromCRD(
-    someCustomResourceDefinition,
-    'example.io',
-    render='static'
-  );
+local processor =
+  crdsonnet.processor.new()
+  + crdsonnet.processor.withRenderEngineType('static');
 
-example
+crdsonnet.crd.render(
+  someCustomResourceDefinition,
+  'example.io',
+  processor,
+)
 ```
 
 Then tell jsonnet to expect a string as output:
@@ -80,8 +76,7 @@ xtd.inspect.inspect(example, 10)
 
 ### Documentation
 
-The dynamic rendering comes with documentation included. It leverages
-[docsonnet](https://github.com/jsonnet-libs/docsonnet).
+The dynamic rendering comes with documentation included. It leverages [docsonnet](https://github.com/jsonnet-libs/docsonnet).
 
 ```jsonnet
 // docs.libsonnet
@@ -108,17 +103,12 @@ jsonnet -J vendor -S -c -m docs docs.libsonnet
 
 ## Development
 
-This project is marked as alpha status. It can be consider it in a usable state for
-production projects however there are no guarantees for a stable API.
+This project is marked as alpha status. It can be consider it in a usable state for production projects however there are no guarantees for a stable API.
 
 ### Testing
 
-There are unit tests under `test/`, these can be run with `make test`, please make sure
-these succeed. When changing test cases, then please follow test-driven development and
-modify the test cases in separate commits that come before functional changes.
+There are unit tests under `test/`, these can be run with `make test`, please make sure these succeed. When changing test cases, then please follow test-driven development and modify the test cases in separate commits that come before functional changes.
 
 ### Documentation
 
-The code hasn't been documented yet, the aim is to primarily document the functions in
-`main.libsonnet` as an entry point to the lib. Other files/functions are currently
-considered 'internal' and might change without notice.
+The code hasn't been documented yet, the aim is to primarily document the functions in `main.libsonnet` as an entry point to the lib. Other files/functions are currently considered 'internal' and might change without notice.
