@@ -141,7 +141,7 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
         else r.nilvalue
       );
 
-      local xofParts = self.xofParts(schema { _parents: super._parents[1:] });
+      local xofParts = self.xofParts(schema + { _parents: super._parents[1:] });
 
       local merge(parts) =
         if std.isObject(parts)
@@ -177,7 +177,7 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
       + (
         if 'items' in schema
            && std.isObject(schema.items)
-        then self.schema(schema.items { _parents: [] })
+        then self.schema(schema.items + { _parents: [] })
         else r.nilvalue
       ),
     // foldEnd

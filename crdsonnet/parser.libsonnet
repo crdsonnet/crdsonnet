@@ -78,7 +78,7 @@ local schemadb_util = import './schemadb.libsonnet';
     if parsed != null
     then
       if std.isObject(parsed[key])
-      then parsed[key] { _name:: key }
+      then parsed[key] + { _name:: key }
       else parsed[key]
     else {},
   // foldEnd
@@ -126,7 +126,7 @@ local schemadb_util = import './schemadb.libsonnet';
         else '';
 
       // Because order may matter (for example for prefixItems), we return a list.
-      parsed { [if name != '' then '_name']:: name }
+      parsed + { [if name != '' then '_name']:: name }
       for item in list
     ],
   // foldEnd
