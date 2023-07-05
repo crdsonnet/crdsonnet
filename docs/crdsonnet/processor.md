@@ -9,6 +9,7 @@
 * [`fn withRenderEngine(engine)`](#fn-withrenderengine)
 * [`fn withRenderEngineType(engineType)`](#fn-withrenderenginetype)
 * [`fn withSchemaDB(db)`](#fn-withschemadb)
+* [`fn withValidation()`](#fn-withvalidation)
 
 ## Fields
 
@@ -48,4 +49,57 @@ withSchemaDB(db)
 ```
 
 `withSchemaDB` adds additional schema databases. These can be created with `crdsonnet.schemaDB`.
+
+
+### fn withValidation
+
+```ts
+withValidation()
+```
+
+`withValidation` turns on schema validation for render engine 'dynamic'. The `with*()` functions will validate the inputs against the given schema.
+
+NOTE: This uses validate-libsonnet, it can validate the most common JSON Schema attributes however some features are not yet implemented, most notably it is missing support for features that require regular expressions (not supported in Jsonnet yet).
+
+Example:
+
+```jsonnet
+local crdsonnet = import 'github.com/crdsonnet/crdsonnet/crdsonnet/main.libsonnet';
+
+local schema = {
+  type: 'object',
+  properties: {
+    name: {
+      type: 'string',
+    },
+  },
+};
+
+local validateProcessor =
+  crdsonnet.processor.new()
+  + crdsonnet.processor.withValidation();
+
+local lib = crdsonnet.schema.render('person', schema, validateProcessor);
+
+lib.person.withName(100)  // invalid input
+
+```
+
+Output:
+
+```console
+TRACE: vendor/github.com/crdsonnet/validate-libsonnet/main.libsonnet:94 
+Invalid parameters:
+  Parameter name is invalid:
+    Value 100 MUST match schema:
+      {
+        "type": "string"
+      }
+RUNTIME ERROR: Assertion failed
+	dynamic.libsonnet:(74:12)-(75:88)	
+	example/json_schema_very_simple_validate.libsonnet:18:1-25	$
+	During evaluation	
+
+
+```
 

@@ -189,6 +189,19 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
       + self.nameParsed(schema, parsed),
     // foldEnd
   },
+  withValidation(): {
+    engine+: {
+      validate(schema, value)::
+        local validate = import 'github.com/crdsonnet/validate-libsonnet/main.libsonnet';
+        validate.checkParameters({
+          [schema._name]:
+            validate.schemaCheck(
+              value,
+              schema
+            ),
+        }),
+    },
+  },
 }
 
 // vim: foldmethod=marker foldmarker=foldStart,foldEnd foldlevel=0
