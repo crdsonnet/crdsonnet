@@ -17,7 +17,12 @@ docs:
 		-e '(import "github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet").render(import "crdsonnet/main.libsonnet")'
 
 crdsonnet/example/json_schema_static_output.libsonnet:
-	jsonnet -S -J crdsonnet/vendor json_schema_static.libsonnet | jsonnetfmt - > crdsonnet/example/json_schema_static_output.libsonnet
+	cd crdsonnet/ && \
+	jsonnet -S -J vendor example/json_schema_static.libsonnet | jsonnetfmt - > example/json_schema_static_output.libsonnet
+
+crdsonnet/example/json_schema_very_simple_validate.libsonnet.output:
+	cd crdsonnet/ && \
+	jsonnet -J vendor example/json_schema_very_simple_validate.libsonnet 2> example/json_schema_very_simple_validate.libsonnet.output
 
 .PHONY: fmt
 fmt:

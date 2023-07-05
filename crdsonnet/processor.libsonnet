@@ -55,4 +55,33 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
   ),
   withRenderEngineType(engineType):
     self.withRenderEngine(renderEngine.new(engineType)),
+  '#withValidation': d.fn(
+    |||
+      `withValidation` turns on schema validation for render engine 'dynamic'. The `with*()` functions will validate the inputs against the given schema.
+
+      NOTE: This uses validate-libsonnet, it can validate the most common JSON Schema attributes however some features are not yet implemented, most notably it is missing support for features that require regular expressions (not supported in Jsonnet yet).
+
+      Example:
+
+      ```jsonnet
+      %(example)s
+      ```
+
+      Output:
+
+      ```console
+      %(output)s
+      ```
+    ||| % {
+      example: std.strReplace(
+        importstr './example/json_schema_very_simple_validate.libsonnet',
+        '../main.libsonnet',
+        'github.com/crdsonnet/crdsonnet/crdsonnet/main.libsonnet',
+      ),
+      output: importstr 'example/json_schema_very_simple_validate.libsonnet.output',
+    }
+  ),
+  withValidation(): {
+    renderEngine+: renderEngine.withValidation(),
+  },
 }
