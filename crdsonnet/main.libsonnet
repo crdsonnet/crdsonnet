@@ -1,40 +1,65 @@
 local helpers = import './helpers.libsonnet';
-local processor = import './processor.libsonnet';
 local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
 
 {
-  '#': d.package.new(
-    'crdsonnet',
-    'https://github.com/crdsonnet/crdsonnet/crdsonnet',
-    'Generate a *runtime* Jsonnet library directly from JSON Schemas, CRDs or OpenAPI components.',
-    std.thisFile,
-    'master',
-  ),
+  '#':
+    d.package.new(
+      'crdsonnet',
+      'https://github.com/crdsonnet/crdsonnet/crdsonnet',
+      'Generate a *runtime* Jsonnet library directly from JSON Schemas, CRDs or OpenAPI components.',
+      std.thisFile,
+      'master',
+    )
+    + d.package.withUsageTemplate(
+      '%(json_schema_simple)s' % {
+        json_schema_simple: std.strReplace(
+          importstr './example/json_schema_simple.libsonnet',
+          '../main.libsonnet',
+          'github.com/crdsonnet/crdsonnet/crdsonnet/main.libsonnet',
+        ),
+      }
+    ),
 
+  local root = self,
   schemaDB: import './schemadb.libsonnet',
   renderEngine: import './render.libsonnet',
-  processor: processor,
+  processor: import './processor.libsonnet',
 
   schema: {
+    '#render': d.fn(
+      '`render` returns a library for a `schema`.',
+      args=[
+        d.arg('name', d.T.string),
+        d.arg('schema', d.T.object),
+        d.arg('processor', d.T.object, default='processor.new()'),
+      ],
+    ),
     render(
       name,
       schema,
-      processor=processor.new(),
+      processor=root.processor.new(),
     ):
       processor.render(name, schema),
   },
 
   crd: {
     local this = self,
-    local importedProcessor = processor,
+    '#render': d.fn(
+      '`render` returns a library for a `definition`.',
+      args=[
+        d.arg('definition', d.T.object),
+        d.arg('groupSuffix', d.T.string),
+        d.arg('processor', d.T.object, default='processor.new()'),
+      ],
+    ),
     render(
       definition,
       groupSuffix,
-      processor=processor.new(),
+      processor=root.processor.new(),
     ):
       local _processor =
         processor
-        + importedProcessor.withSchemaDB(helpers.metadataRefSchemaDB);
+        + root.processor.withSchemaDB(helpers.metadataRefSchemaDB);
       local renderEngine = _processor.renderEngine;
       local grouping = helpers.getGroupKey(definition.spec.group, groupSuffix);
       local name = helpers.camelCaseKind(this.getKind(definition));
@@ -82,11 +107,20 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
     },
 
   openapi: {
+    '#render': d.fn(
+      '`render` returns a library for a `component` in an OpenAPI `schema`.',
+      args=[
+        d.arg('name', d.T.string),
+        d.arg('component', d.T.object),
+        d.arg('schema', d.T.object),
+        d.arg('processor', d.T.object, default='processor.new()'),
+      ],
+    ),
     render(
       name,
       component,
       schema,
-      processor=processor.new(),
+      processor=root.processor.new(),
     ):
       local extendSchema =
         std.mergePatch(
@@ -109,6 +143,7 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
 // Legacy API endpoints
 // These endpoints aren't very flexible and require more arguments to add features, this is an anti-pattern. They have been reimplemented to use above modular setup as an example and to verify the modular pattern works. These functions are covered by unit tests.
 + {
+  local root = self,
   local defaultRender = 'dynamic',
 
   fromSchema(name, schema, schemaDB={}, render=defaultRender):
@@ -116,24 +151,24 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
     then error "name can't be an empty string"
     else
       local _processor =
-        processor.new()
-        + processor.withSchemaDB(schemaDB)
-        + processor.withRenderEngineType(render);
+        root.processor.new()
+        + root.processor.withSchemaDB(schemaDB)
+        + root.processor.withRenderEngineType(render);
       self.schema.render(name, schema, _processor),
 
   fromCRD(definition, groupSuffix, schemaDB={}, render=defaultRender):
     local _processor =
-      processor.new()
-      + processor.withSchemaDB(schemaDB)
-      + processor.withRenderEngineType(render);
+      root.processor.new()
+      + root.processor.withSchemaDB(schemaDB)
+      + root.processor.withRenderEngineType(render);
     self.crd.render(definition, groupSuffix, _processor),
 
   // XRD: Crossplane CompositeResourceDefinition
   fromXRD(definition, groupSuffix, schemaDB={}, render=defaultRender):
     local _processor =
-      processor.new()
-      + processor.withSchemaDB(schemaDB)
-      + processor.withRenderEngineType(render);
+      root.processor.new()
+      + root.processor.withSchemaDB(schemaDB)
+      + root.processor.withRenderEngineType(render);
     self.xrd.render(definition, groupSuffix, _processor),
 
   fromOpenAPI(name, component, schema, schemaDB={}, render=defaultRender):
@@ -141,16 +176,16 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
     then error "name can't be an empty string"
     else
       local _processor =
-        processor.new()
-        + processor.withSchemaDB(schemaDB)
-        + processor.withRenderEngineType(render);
+        root.processor.new()
+        + root.processor.withSchemaDB(schemaDB)
+        + root.processor.withRenderEngineType(render);
       self.openapi.render(name, component, schema, _processor),
 
   // expects schema as rendered by `kubectl get --raw /openapi/v2`
   fromKubernetesOpenAPI(schema, render=defaultRender):
     local _processor =
-      processor.new()
-      + processor.withRenderEngineType(render);
+      root.processor.new()
+      + root.processor.withRenderEngineType(render);
     local renderEngine = _processor.renderEngine;
     std.foldl(
       function(acc, d)
