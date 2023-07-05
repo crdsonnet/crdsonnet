@@ -15,3 +15,6 @@ docs:
 		-J crdsonnet/vendor \
 		-S -c -m docs \
 		-e '(import "github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet").render(import "crdsonnet/main.libsonnet")'
+
+crdsonnet/example/json_schema_static_output.libsonnet:
+	jsonnet -S -J crdsonnet/vendor json_schema_static.libsonnet | jsonnetfmt - > crdsonnet/example/json_schema_static_output.libsonnet
