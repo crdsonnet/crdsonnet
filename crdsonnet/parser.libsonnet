@@ -2,13 +2,6 @@ local schemadb_util = import './schemadb.libsonnet';
 {
   local this = self,
 
-  getID(schema):
-    if '$id' in schema
-    then schema['$id']
-    else if 'id' in schema
-    then schema.id
-    else '',  //std.trace("Can't find '$id' (or 'id') in schema", ''),
-
   getRefName(ref): std.reverse(std.split(ref, '/'))[0],
 
   getURIBase(uri): std.join('/', std.splitLimit(uri, '/', 5)[0:3]),
@@ -167,7 +160,7 @@ local schemadb_util = import './schemadb.libsonnet';
       // Relative reference
       else if std.startsWith(ref, '/')
       then
-        local baseURI = self.getURIBase(this.getID(currentSchema));
+        local baseURI = self.getURIBase(schemadb_util.getID(currentSchema));
         if std.member(ref, '#')
         // Relative reference with fragment
         then getFragment(baseURI, ref)
