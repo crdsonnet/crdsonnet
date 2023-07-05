@@ -1,9 +1,22 @@
+local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
+
 {
   local engineTypes = {
     static: import 'static.libsonnet',
     dynamic: import 'dynamic.libsonnet',
   },
 
+  '#': d.package.newSub(
+    'renderEngine',
+    '`renderEngine` provides an interface to create a renderEngine.',
+  ),
+
+  '#new': d.fn(
+    '`new` returns a renderEngine.',
+    args=[
+      d.arg('engineType', d.T.string, enums=['static', 'dynamic']),
+    ],
+  ),
   new(engineType): {
     engine: engineTypes[engineType],
     local r = self.engine,

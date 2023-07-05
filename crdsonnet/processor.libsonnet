@@ -6,7 +6,7 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
   '#': d.package.newSub(
     'processor',
     |||
-      `processor` provides and interface to configure the parser and render engine, returns a parser() and render() function.
+      `processor` provides an interface to configure the parser and render engine, returns a parser() and render() function.
     |||
   ),
 
