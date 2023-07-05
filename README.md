@@ -2,7 +2,7 @@
 
 Generate a *runtime* Jsonnet library directly from JSON Schemas, CRDs or OpenAPI components.
 
-> This project has moved from POC to an alpha status. It can be consider it in a usable state for production projects however there are no guarantees for a stable API.
+> This project is actively used in several projects, most notably [Grafonnet](https://github.com/grafana/grafonnet). It can be consider in a usable state for production projects however the API should be considered in alpha status.
 
 ## Install
 
@@ -12,30 +12,30 @@ jb install https://github.com/crdsonnet/crdsonnet/crdsonnet
 
 ## Usage
 
-Generate a library from a CustomResourceDefinition:
+Generate a library from a JSON Schema:
 
 ```jsonnet
-// main.libsonnet
 local crdsonnet = import 'github.com/crdsonnet/crdsonnet/crdsonnet/main.libsonnet';
 
-crdsonnet.crd.render(
-  someCustomResourceDefinition,
-  'example.io'
-)
-```
+local schema = {
+  type: 'object',
+  properties: {
+    name: {
+      type: 'string',
+    },
+  },
+};
 
-Then use it:
+local lib = crdsonnet.schema.render('person', schema);
 
-```jsonnet
-// example.libsonnet
-local example = './main.libsonnet';
-
-example.core.v1.someObject.new(name='example')
+lib.person.withName('John')
 ```
 
 ### Static rendering
 
 The library can render a static library, this can be useful when rendering them in-memory becomes too slow or for debugging purposes. The static rendering will represent the jsonnet as a string, however this kind of string manipulation is quite hard in jsonnet and the output can be quite ugly.
+
+> NOTE: This render engine isn't well tested and may not always work. Contributions to improve this are more than welcome.
 
 To do this, first set the `render` to 'static':
 
@@ -43,22 +43,38 @@ To do this, first set the `render` to 'static':
 // static.libsonnet
 local crdsonnet = import 'github.com/crdsonnet/crdsonnet/crdsonnet/main.libsonnet';
 
-local processor =
+
+local schema = {
+  type: 'object',
+  properties: {
+    name: {
+      type: 'string',
+    },
+  },
+};
+
+local staticProcessor =
   crdsonnet.processor.new()
   + crdsonnet.processor.withRenderEngineType('static');
 
-crdsonnet.crd.render(
-  someCustomResourceDefinition,
-  'example.io',
-  processor,
-)
+crdsonnet.schema.render('person', schema, staticProcessor)
 ```
 
-Then tell jsonnet to expect a string as output:
+Then tell jsonnet to expect a string as output and format it for a readable output:
 
 
 ```console
-jsonnet -S -J vendor static.libsonnet
+> jsonnet -S -J vendor static.libsonnet | jsonnetfmt -
+```
+
+Output:
+
+```jsonnet
+{
+  person+: {
+    withName(value): { name: value },
+  },
+}
 ```
 
 ### Debug
@@ -108,7 +124,3 @@ This project is marked as alpha status. It can be consider it in a usable state 
 ### Testing
 
 There are unit tests under `test/`, these can be run with `make test`, please make sure these succeed. When changing test cases, then please follow test-driven development and modify the test cases in separate commits that come before functional changes.
-
-### Documentation
-
-The code hasn't been documented yet, the aim is to primarily document the functions in `main.libsonnet` as an entry point to the lib. Other files/functions are currently considered 'internal' and might change without notice.
