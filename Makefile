@@ -18,3 +18,8 @@ docs:
 
 crdsonnet/example/json_schema_static_output.libsonnet:
 	jsonnet -S -J crdsonnet/vendor json_schema_static.libsonnet | jsonnetfmt - > crdsonnet/example/json_schema_static_output.libsonnet
+
+.PHONY: fmt
+fmt:
+	@find . -path './.git' -prune -o -name 'vendor' -prune -o -name '*.libsonnet' -print -o -name '*.jsonnet' -print | \
+		xargs -n 1 -- jsonnetfmt --no-use-implicit-plus -i
