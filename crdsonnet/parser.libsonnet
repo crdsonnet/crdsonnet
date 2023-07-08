@@ -1,11 +1,10 @@
-local schemadb_util = import './schemadb.libsonnet';
+local resolver = import './resolver.libsonnet';
 {
   local this = self,
 
-  getRefName(ref): std.reverse(std.split(ref, '/'))[0],
+  resolveRef: resolver.resolve,
 
-  getURIBase(uri): std.join('/', std.splitLimit(uri, '/', 5)[0:3]),
-  getURIPath(uri): '/' + std.join('/', std.splitLimit(uri, '/', 5)[3:]),
+  getRefName(ref): std.reverse(std.split(ref, '/'))[0],
 
   parseSchema(key, schema, currentSchema, schemaDB={}, parents=[]):
     // foldStart
@@ -15,13 +14,11 @@ local schemadb_util = import './schemadb.libsonnet';
     then error 'Schema is not an object or boolean'
     else
       local schemaToParse =
-        if '$ref' in schema
-        then this.resolveRef(
-          schema['$ref'],
+        resolver.resolveRef(
+          schema,
           currentSchema,
           schemaDB
-        )
-        else schema;
+        );
 
       // shortcut to make it more readable below
       // requires the parseSchema* functions to have the same signature
@@ -129,67 +126,6 @@ local schemadb_util = import './schemadb.libsonnet';
       parsed + { [if name != '' then '_name']:: name }
       for item in list
     ],
-  // foldEnd
-
-  resolveRef(ref, currentSchema, schemaDB):
-    // foldStart
-    local getFragment(baseURI, ref) =
-      local split = std.splitLimit(ref, '#', 2);
-      local schema = schemadb_util.get(schemaDB, baseURI + split[0]);
-      if schema != {}
-      then
-        this.resolveRef(
-          '#' + split[1],
-          schemadb_util.get(schemaDB, baseURI + split[0]),
-          schemaDB,
-        )
-      else {};
-
-    local resolved =
-      // Absolute URI
-      if std.startsWith(ref, 'https://')
-      then
-        local baseURI = self.getURIBase(ref);
-        local path = self.getURIPath(ref);
-        if std.member(ref, '#')
-        // Absolute URI with fragment
-        then getFragment(baseURI, path)
-        // Absolute URI
-        else schemadb_util.get(schemaDB, baseURI + path)
-
-      // Relative reference
-      else if std.startsWith(ref, '/')
-      then
-        local baseURI = self.getURIBase(schemadb_util.getID(currentSchema));
-        if std.member(ref, '#')
-        // Relative reference with fragment
-        then getFragment(baseURI, ref)
-        // Relative reference
-        else schemadb_util.get(schemaDB, baseURI + ref)
-
-      // Fragment only
-      else if std.startsWith(ref, '#')
-      then
-        local split = std.split(ref, '/')[1:];
-        local find(schema, keys) =
-          local key = keys[0];
-          if key in schema
-          then
-            if std.length(keys) == 1
-            then schema[key]
-            else find(schema[key], keys[1:])
-          else {};
-        find(currentSchema, split)
-
-      else {};
-    if '$ref' in resolved
-    then
-      this.resolveRef(
-        resolved['$ref'],
-        currentSchema,
-        schemaDB,
-      )
-    else resolved,
   // foldEnd
 }
 
