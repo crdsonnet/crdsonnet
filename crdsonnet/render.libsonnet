@@ -4,6 +4,7 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
   local engineTypes = {
     static: import 'static.libsonnet',
     dynamic: import 'dynamic.libsonnet',
+    jsonnet: import 'jsonnet.libsonnet',
   },
 
   '#': d.package.newSub(
@@ -14,7 +15,7 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
   '#new': d.fn(
     '`new` returns a renderEngine.',
     args=[
-      d.arg('engineType', d.T.string, enums=['static', 'dynamic']),
+      d.arg('engineType', d.T.string, enums=['static', 'dynamic', 'jsonnet']),
     ],
   ),
   new(engineType): {
@@ -27,7 +28,9 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
     newFunction: r.newFunction,
 
     render(schema):
-      r.toObject(self.schema(schema)),
+      if engineType == 'jsonnet'  // FIXME: quick hack
+      then r.toObject(self.schema(schema)).toString(break='\n')
+      else r.toObject(self.schema(schema)),
 
     schema(schema):
       if 'const' in schema
