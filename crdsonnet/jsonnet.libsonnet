@@ -119,7 +119,7 @@ local j = import 'github.com/Duologic/jsonnet-libsonnet/main.libsonnet';
       j.conditional(
         ifexpr=j.functioncall(
           j.fieldaccess(
-            j.id('std'),
+            [j.id('std')],
             j.id('isArray'),
           ),
           args=[j.id('value')],
@@ -177,13 +177,15 @@ local j = import 'github.com/Duologic/jsonnet-libsonnet/main.libsonnet';
       j.binary(
         '+',
         [
-          j.functioncall(j.fieldaccess(j.id('self'), j.id('withApiVersion'))),
-          j.functioncall(j.fieldaccess(j.id('self'), j.id('withKind'))),
+          j.functioncall(j.fieldaccess([j.id('self')], j.id('withApiVersion'))),
+          j.functioncall(j.fieldaccess([j.id('self')], j.id('withKind'))),
           j.functioncall(
             j.fieldaccess(
-              j.fieldaccess(
-                j.id('self'), j.id('metadata')
-              ), j.id('withName')
+              [
+                j.id('self'),
+                j.id('metadata'),
+              ],
+              j.id('withName')
             ),
             args=params
           ),
