@@ -31,9 +31,7 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
   functionHelp(functionName, schema):: {
     ['#%s' % functionName]::
       d.fn(
-        help=(if 'description' in schema
-              then schema.description
-              else ''),
+        help=std.get(schema, 'description', ''),
         args=(
           if 'const' in schema
           then []
@@ -119,10 +117,9 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
         ),
     },
 
-  named(name, object)::
-    {
-      [name]+: object,
-    },
+  named(name, object):: {
+    [name]+: object,
+  },
 
   toObject(object)::
     object,
@@ -139,5 +136,3 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
       },
     ),
 }
-
-// vim: foldmethod=indent

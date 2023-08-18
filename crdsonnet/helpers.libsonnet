@@ -21,17 +21,14 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
 
   properties: {
     withMetadataRef(): {
-      // foldStart
       properties+: {
         metadata+: {
           '$ref': 'https://objectmeta/schema#/definitions/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta',
         },
       },
     },
-    // foldEnd
 
     withGroupVersionKind(group, version, kind): {
-      // foldStart
       properties+: {
         apiVersion+: {
           const:
@@ -46,10 +43,8 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
         },
       },
     },
-    // foldEnd
 
     withCompositeResource(): {
-      // foldStart
       properties+: {
         spec+: {
           properties+: {
@@ -89,8 +84,5 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
         },
       },
     },
-    // foldEnd
   },
 }
-
-// vim: foldmethod=marker foldmarker=foldStart,foldEnd foldlevel=0

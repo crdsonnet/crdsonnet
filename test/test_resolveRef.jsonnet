@@ -125,5 +125,3 @@ test.new(std.thisFile)
     expected={ type: 'string' },
   )
 )
-
-// vim: foldmethod=marker foldmarker=(,) foldlevel=1

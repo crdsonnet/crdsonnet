@@ -29,6 +29,7 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
       local parsedSchema = self.parse(name, schema);
       self.renderEngine.render(parsedSchema[name]),
   },
+
   '#withSchemaDB': d.fn(
     |||
       `withSchemaDB` adds additional schema databases. These can be created with `crdsonnet.schemaDB`.
@@ -38,6 +39,7 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
   withSchemaDB(db): {
     schemaDB+: db,
   },
+
   '#withRenderEngine': d.fn(
     |||
       `withRenderEngine` configures an alternative render engine. This can be created with `crdsonnet.renderEngine`.
@@ -47,6 +49,7 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
   withRenderEngine(engine): {
     renderEngine: engine,
   },
+
   '#withRenderEngineType': d.fn(
     |||
       `withRenderEngineType` is a shortcut to configure an alternative render engine type.
@@ -55,6 +58,7 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
   ),
   withRenderEngineType(engineType):
     self.withRenderEngine(renderEngine.new(engineType)),
+
   '#withValidation': d.fn(
     |||
       `withValidation` turns on schema validation for render engine 'dynamic'. The `with*()` functions will validate the inputs against the given schema.
