@@ -30,7 +30,6 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
       r.toObject(self.schema(schema)),
 
     schema(schema):
-      // foldStart
       if 'const' in schema
       then self.const(schema)  // value is a constant
 
@@ -63,10 +62,8 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
 
       else self.other(schema)
     ,
-    // foldEnd
 
     nameParsed(schema, parsed):
-      // foldStart
       if '_name' in schema
          && parsed != r.nilvalue
       then
@@ -79,18 +76,14 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
       else
         parsed
     ,
-    // foldEnd
 
     functions(schema):
-      // foldStart
       if std.length(schema._parents) != 0 && '_name' in schema
       then r.withFunction(schema)
            + r.mixinFunction(schema)
       else r.nilvalue,
-    // foldEnd
 
     xofParts(schema):
-      // foldStart
       local handle(schema, k) =
         if k in schema
         then
@@ -111,7 +104,6 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
           + handle(schema, 'anyOf')
           + handle(schema, 'oneOf'),
       },
-    // foldEnd
 
     const(schema): r.withConstant(schema),
 
@@ -121,14 +113,11 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
       else r.nilvalue,
 
     other(schema):
-      // foldStart
       if std.length(schema._parents) != 0 && '_name' in schema
       then r.withFunction(schema)
       else r.nilvalue,
-    //foldEnd
 
     object(schema):
-      // foldStart
       local properties = (
         if 'properties' in schema
         then
@@ -167,10 +156,8 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
 
       self.functions(schema)
       + self.nameParsed(schema, parsed),
-    // foldEnd
 
     array(schema):
-      // foldStart
       (if '_name' in schema
        then r.arrayFunctions(schema)
        else r.nilvalue)
@@ -180,15 +167,13 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
         then self.schema(schema.items + { _parents: [] })
         else r.nilvalue
       ),
-    // foldEnd
 
     xof(schema):
-      // foldStart
       local parsed = self.xofParts(schema).combined;
       self.functions(schema)
       + self.nameParsed(schema, parsed),
-    // foldEnd
   },
+
   withValidation(): {
     engine+: {
       validate(schema, value)::
@@ -203,5 +188,3 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
     },
   },
 }
-
-// vim: foldmethod=marker foldmarker=foldStart,foldEnd foldlevel=0

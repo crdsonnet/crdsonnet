@@ -7,7 +7,6 @@ local resolver = import './resolver.libsonnet';
   getRefName(ref): std.reverse(std.split(ref, '/'))[0],
 
   parseSchema(key, schema, currentSchema, schemaDB={}, parents=[]):
-    // foldStart
     if std.isBoolean(schema)
     then { [key]+: schema }
     else if !std.isObject(schema)
@@ -52,13 +51,11 @@ local resolver = import './resolver.libsonnet';
           + { _parents:: parents },
       }
   ,
-  // foldEnd
 
   parseSchemaItems(key, schema, currentSchema, schemaDB, parents):
     self.parseSchemaSingle(key, schema, currentSchema, schemaDB, []),
 
   parseSchemaSingle(key, schema, currentSchema, schemaDB, parents):
-    // foldStart
     local i =
       if std.length(parents) > 0
       then std.length(parents) - 1
@@ -78,10 +75,8 @@ local resolver = import './resolver.libsonnet';
       then parsed[key] + { _name:: key }
       else parsed[key]
     else {},
-  // foldEnd
 
   parseSchemaMap(key, map, currentSchema, schemaDB, parents):
-    // foldStart
     std.foldl(
       function(acc, k)
         acc
@@ -96,10 +91,8 @@ local resolver = import './resolver.libsonnet';
       std.objectFields(map),
       {}
     ),
-  // foldEnd
 
   parseSchemaList(key, list, currentSchema, schemaDB, parents):
-    // foldStart
     [
       local parsed =
         this.parseSchema(
@@ -126,7 +119,4 @@ local resolver = import './resolver.libsonnet';
       parsed + { [if name != '' then '_name']:: name }
       for item in list
     ],
-  // foldEnd
 }
-
-// vim: foldmethod=marker foldmarker=foldStart,foldEnd foldlevel=0

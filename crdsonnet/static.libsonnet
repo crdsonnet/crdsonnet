@@ -127,5 +127,3 @@
       |||,
     ),
 }
-
-// vim: foldmethod=indent
