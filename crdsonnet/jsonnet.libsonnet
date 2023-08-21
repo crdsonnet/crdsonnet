@@ -5,6 +5,20 @@ local j = import 'github.com/Duologic/jsonnet-libsonnet/main.libsonnet';
 
   nilvalue:: [],
 
+  // jsonnet-libsonnet provides some formatting with indentation and linebreaks, this customField removes that formatting, ideally this type of formatting should be configurable but I haven't found a good interface for that yet.
+  local customField = {
+    field(fieldname, expr, additive=false, hidden=false): {
+      fieldname: fieldname.toString(),
+      toString(indent='', break=''):
+        j.field.field(fieldname, expr, additive, hidden).toString(),
+    },
+    func(fieldname, expr, params=[], hidden=false): {
+      fieldname: fieldname.toString(),
+      toString(indent='', break=''):
+        j.field.func(fieldname, expr, params, hidden).toString(),
+    },
+  },
+
   nestInParents(name, parents, field)::
     j.object.members([
       std.foldr(
@@ -12,7 +26,7 @@ local j = import 'github.com/Duologic/jsonnet-libsonnet/main.libsonnet';
           if p == name
           then acc
           else
-            j.field.field(
+            customField.field(
               j.fieldname.string(p),
               j.object.members([
                 acc,
@@ -36,12 +50,12 @@ local j = import 'github.com/Duologic/jsonnet-libsonnet/main.libsonnet';
     'with' + std.asciiUpper(n[0]) + n[1:],
 
   withFunction(schema):: [
-    j.field.func(
+    customField.func(
       j.fieldname.id(this.functionName(schema._name)),
       expr=this.nestInParents(
         schema._name,
         schema._parents,
-        j.field.field(
+        customField.field(
           j.fieldname.string(schema._name),
           j.id('value')
         ),
@@ -61,12 +75,12 @@ local j = import 'github.com/Duologic/jsonnet-libsonnet/main.libsonnet';
   ],
 
   withConstant(schema):: [
-    j.field.func(
+    customField.func(
       j.fieldname.id(this.functionName(schema._name)),
       expr=this.nestInParents(
         schema._name,
         schema._parents,
-        j.field.field(
+        customField.field(
           j.fieldname.string(schema._name),
           j.literal(schema.const)
         ),
@@ -75,12 +89,12 @@ local j = import 'github.com/Duologic/jsonnet-libsonnet/main.libsonnet';
   ],
 
   withBoolean(schema):: [
-    j.field.func(
+    customField.func(
       j.fieldname.id(this.functionName(schema._name)),
       expr=this.nestInParents(
         schema._name,
         schema._parents,
-        j.field.field(
+        customField.field(
           j.fieldname.string(schema._name),
           j.id('value')
         ),
@@ -97,12 +111,12 @@ local j = import 'github.com/Duologic/jsonnet-libsonnet/main.libsonnet';
   ],
 
   mixinFunction(schema):: [
-    j.field.func(
+    customField.func(
       j.fieldname.id(this.functionName(schema._name) + 'Mixin'),
       expr=this.nestInParents(
         schema._name,
         schema._parents,
-        j.field.field(
+        customField.field(
           j.fieldname.string(schema._name),
           j.id('value'),
           additive=true,
@@ -128,12 +142,12 @@ local j = import 'github.com/Duologic/jsonnet-libsonnet/main.libsonnet';
         elseexpr=j.array.items([j.id('value')]),
       );
     [
-      j.field.func(
+      customField.func(
         j.fieldname.id(this.functionName(schema._name)),
         expr=this.nestInParents(
           schema._name,
           schema._parents,
-          j.field.field(
+          customField.field(
             j.fieldname.string(schema._name),
             conditional
           ),
@@ -142,12 +156,12 @@ local j = import 'github.com/Duologic/jsonnet-libsonnet/main.libsonnet';
           j.param.id('value'),
         ],
       ),
-      j.field.func(
+      customField.func(
         j.fieldname.id(this.functionName(schema._name) + 'Mixin'),
         expr=this.nestInParents(
           schema._name,
           schema._parents,
-          j.field.field(
+          customField.field(
             j.fieldname.string(schema._name),
             conditional,
             additive=true,
@@ -172,7 +186,7 @@ local j = import 'github.com/Duologic/jsonnet-libsonnet/main.libsonnet';
 
   newFunction(parents)::
     local params = [j.id('name')];
-    j.field.func(
+    customField.func(
       j.id('new'),
       j.binary(
         '+',
