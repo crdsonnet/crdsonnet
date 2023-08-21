@@ -1,4 +1,5 @@
 local j = import 'github.com/Duologic/jsonnet-libsonnet/main.libsonnet';
+local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
 
 {
   local this = self,
@@ -49,7 +50,45 @@ local j = import 'github.com/Duologic/jsonnet-libsonnet/main.libsonnet';
     ]);
     'with' + std.asciiUpper(n[0]) + n[1:],
 
+  functionHelp(functionName, schema)::
+    customField.field(
+      j.fieldname.string('#' + functionName),
+      j.literal(  // render docsonnet as literal to avoid docsonnet dependency
+        d.fn(
+          help=std.get(schema, 'description', ''),
+          args=(
+            if 'const' in schema
+            then []
+            else [
+              d.arg(
+                'value',
+                type=(
+                  if 'type' in schema
+                  then schema.type
+                  else 'string'
+                ),
+                default=(
+                  if 'default' in schema
+                  then schema.default
+                  else null
+                ),
+                enums=(
+                  if 'enum' in schema
+                  then schema.enum
+                  else null
+                )
+              ),
+            ]
+          )
+        ),
+      )
+    ),
+
   withFunction(schema):: [
+    self.functionHelp(
+      this.functionName(schema._name),
+      schema,
+    ),
     customField.func(
       j.fieldname.id(this.functionName(schema._name)),
       expr=this.nestInParents(
@@ -75,6 +114,10 @@ local j = import 'github.com/Duologic/jsonnet-libsonnet/main.libsonnet';
   ],
 
   withConstant(schema):: [
+    self.functionHelp(
+      this.functionName(schema._name),
+      schema,
+    ),
     customField.func(
       j.fieldname.id(this.functionName(schema._name)),
       expr=this.nestInParents(
@@ -89,6 +132,10 @@ local j = import 'github.com/Duologic/jsonnet-libsonnet/main.libsonnet';
   ],
 
   withBoolean(schema):: [
+    self.functionHelp(
+      this.functionName(schema._name),
+      schema,
+    ),
     customField.func(
       j.fieldname.id(this.functionName(schema._name)),
       expr=this.nestInParents(
@@ -111,6 +158,10 @@ local j = import 'github.com/Duologic/jsonnet-libsonnet/main.libsonnet';
   ],
 
   mixinFunction(schema):: [
+    self.functionHelp(
+      this.functionName(schema._name),
+      schema,
+    ),
     customField.func(
       j.fieldname.id(this.functionName(schema._name) + 'Mixin'),
       expr=this.nestInParents(
@@ -142,6 +193,10 @@ local j = import 'github.com/Duologic/jsonnet-libsonnet/main.libsonnet';
         elseexpr=j.array.items([j.id('value')]),
       );
     [
+      self.functionHelp(
+        this.functionName(schema._name),
+        schema,
+      ),
       customField.func(
         j.fieldname.id(this.functionName(schema._name)),
         expr=this.nestInParents(
@@ -155,6 +210,10 @@ local j = import 'github.com/Duologic/jsonnet-libsonnet/main.libsonnet';
         params=[
           j.param.id('value'),
         ],
+      ),
+      self.functionHelp(
+        this.functionName(schema._name) + 'Mixin',
+        schema,
       ),
       customField.func(
         j.fieldname.id(this.functionName(schema._name) + 'Mixin'),
