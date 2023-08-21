@@ -125,7 +125,9 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
         schema._parents,
         customField.field(
           j.fieldname.string(schema._name),
-          j.literal(schema.const)
+          if std.isString(schema.const)
+          then j.string(schema.const)
+          else j.literal(schema.const)
         ),
       ),
     ),
