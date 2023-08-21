@@ -159,7 +159,7 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
 
   mixinFunction(schema):: [
     self.functionHelp(
-      this.functionName(schema._name),
+      this.functionName(schema._name) + 'Mixin',
       schema,
     ),
     customField.func(
