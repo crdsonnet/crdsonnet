@@ -8,16 +8,18 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
 
   // jsonnet-libsonnet provides some formatting with indentation and linebreaks, this customField removes that formatting, ideally this type of formatting should be configurable but I haven't found a good interface for that yet.
   local customField = {
-    field(fieldname, expr, additive=false, hidden=false): {
-      fieldname: fieldname.toString(),
-      toString(indent='', break=''):
-        j.field.field(fieldname, expr, additive, hidden).toString(),
-    },
-    func(fieldname, expr, params=[], hidden=false): {
-      fieldname: fieldname.toString(),
-      toString(indent='', break=''):
-        j.field.func(fieldname, expr, params, hidden).toString(),
-    },
+    field(fieldname, expr, additive=false, hidden=false):
+      j.field.field(fieldname, expr, additive, hidden)
+      + {
+        toString(indent='', break=''):
+          j.field.field(fieldname, expr, additive, hidden).toString(),
+      },
+    func(fieldname, expr, params=[], hidden=false):
+      j.field.func(fieldname, expr, params, hidden)
+      + {
+        toString(indent='', break=''):
+          j.field.func(fieldname, expr, params, hidden).toString(),
+      },
   },
 
   nestInParents(name, parents, field)::
