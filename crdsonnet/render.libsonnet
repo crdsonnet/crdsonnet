@@ -1,3 +1,4 @@
+local jutils = import 'github.com/Duologic/jsonnet-libsonnet/utils.libsonnet';
 local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
 
 {
@@ -136,7 +137,15 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
       local xofParts = self.xofParts(schema + { _parents: super._parents[1:] });
 
       local merge(parts) =
-        if std.isObject(parts)
+        if engineType == 'jsonnet'
+        then
+          [
+            member
+            for part in parts
+            if jutils.type(part) == 'field' && jutils.isObject(part.expr)
+            for member in part.expr.members
+          ]
+        else if std.isObject(parts)
         then
           std.foldl(
             function(acc, k)
@@ -151,11 +160,20 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
 
       // Merge allOf/anyOf as they can be used in combination with each other
       // Keep oneOf seperate as it they would not be used in combination with each other
+      // TODO: Merging with Jsonnet AST needs a proper solution as duplicate fieldnames are not tolerated
       local parsed =
-        merge(xofParts.allOf)
-        + merge(xofParts.anyOf)
-        + xofParts.oneOf
-        + properties;
+        if engineType == 'jsonnet'
+        then jutils.deepMergeObjectFields(
+          merge(xofParts.allOf)
+          + merge(xofParts.anyOf)
+          + xofParts.oneOf
+          + properties
+        )
+        else
+          merge(xofParts.allOf)
+          + merge(xofParts.anyOf)
+          + xofParts.oneOf
+          + properties;
 
       self.functions(schema)
       + self.nameParsed(schema, parsed),
