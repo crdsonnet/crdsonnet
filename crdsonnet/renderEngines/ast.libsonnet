@@ -247,7 +247,7 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
   toObject(members)::
     j.object.members(members),
 
-  newFunction(parents)::
+  newFunction(parents):: [
     local params = [j.id('name')];
     customField.func(
       j.id('new'),
@@ -270,4 +270,5 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
         params=params,
       )
     ),
+  ],
 }
