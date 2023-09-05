@@ -1,13 +1,8 @@
+local engines = import './renderEngines/main.libsonnet';
 local jutils = import 'github.com/Duologic/jsonnet-libsonnet/utils.libsonnet';
 local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
 
 {
-  local engines = {
-    static: import 'renderEngines/static.libsonnet',
-    dynamic: import 'renderEngines/dynamic.libsonnet',
-    ast: import 'renderEngines/ast.libsonnet',
-  },
-
   '#': d.package.newSub(
     'renderEngine',
     '`renderEngine` provides an interface to create a renderEngine.',
@@ -16,7 +11,11 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
   '#new': d.fn(
     '`new` returns a renderEngine.',
     args=[
-      d.arg('engineType', d.T.string, enums=['static', 'dynamic', 'ast']),
+      d.arg(
+        'engineType',
+        d.T.string,
+        enums=std.objectFields(engines)
+      ),
     ],
   ),
   new(engineType): {

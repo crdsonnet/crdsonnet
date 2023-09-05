@@ -1,5 +1,6 @@
 local parser = import './parser.libsonnet';
 local renderEngine = import './render.libsonnet';
+local engines = import './renderEngines/main.libsonnet';
 local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
 
 {
@@ -54,7 +55,7 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
     |||
       `withRenderEngineType` is a shortcut to configure an alternative render engine type.
     |||,
-    args=[d.arg('engineType', d.T.string, enums=['dynamic', 'static', 'ast'])],
+    args=[d.arg('engineType', d.T.string, enums=std.objectFields(engines))],
   ),
   withRenderEngineType(engineType):
     self.withRenderEngine(renderEngine.new(engineType)),
