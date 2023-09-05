@@ -54,7 +54,7 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
     |||
       `withRenderEngineType` is a shortcut to configure an alternative render engine type.
     |||,
-    args=[d.arg('engineType', d.T.string, enums=['dynamic', 'static'])],
+    args=[d.arg('engineType', d.T.string, enums=['dynamic', 'static', 'ast'])],
   ),
   withRenderEngineType(engineType):
     self.withRenderEngine(renderEngine.new(engineType)),

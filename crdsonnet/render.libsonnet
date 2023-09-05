@@ -2,10 +2,10 @@ local jutils = import 'github.com/Duologic/jsonnet-libsonnet/utils.libsonnet';
 local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
 
 {
-  local engineTypes = {
-    static: import 'static.libsonnet',
-    dynamic: import 'dynamic.libsonnet',
-    jsonnet: import 'jsonnet.libsonnet',
+  local engines = {
+    static: import 'renderEngines/static.libsonnet',
+    dynamic: import 'renderEngines/dynamic.libsonnet',
+    ast: import 'renderEngines/ast.libsonnet',
   },
 
   '#': d.package.newSub(
@@ -16,11 +16,11 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
   '#new': d.fn(
     '`new` returns a renderEngine.',
     args=[
-      d.arg('engineType', d.T.string, enums=['static', 'dynamic', 'jsonnet']),
+      d.arg('engineType', d.T.string, enums=['static', 'dynamic', 'ast']),
     ],
   ),
   new(engineType): {
-    engine: engineTypes[engineType],
+    engine: engines[engineType],
     local r = self.engine,
 
     nilvalue: r.nilvalue,
@@ -29,9 +29,7 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
     newFunction: r.newFunction,
 
     render(schema):
-      if engineType == 'jsonnet'  // FIXME: quick hack
-      then r.toObject(self.schema(schema)).toString(break='\n')
-      else r.toObject(self.schema(schema)),
+      r.toObject(self.schema(schema)),
 
     schema(schema):
       if 'const' in schema
@@ -137,7 +135,7 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
       local xofParts = self.xofParts(schema + { _parents: super._parents[1:] });
 
       local merge(parts) =
-        if engineType == 'jsonnet'
+        if engineType == 'ast'
         then
           [
             member
@@ -145,7 +143,7 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
             if jutils.type(part) == 'field' && jutils.isObject(part.expr)
             for member in part.expr.members
           ]
-        else if std.isObject(parts)
+        else if engineType == 'dynamic' && std.isObject(parts)
         then
           std.foldl(
             function(acc, k)
@@ -160,15 +158,15 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
 
       // Merge allOf/anyOf as they can be used in combination with each other
       // Keep oneOf seperate as it they would not be used in combination with each other
-      // TODO: Merging with Jsonnet AST needs a proper solution as duplicate fieldnames are not tolerated
       local parsed =
-        if engineType == 'jsonnet'
-        then jutils.deepMergeObjectFields(
-          merge(xofParts.allOf)
-          + merge(xofParts.anyOf)
-          + xofParts.oneOf
-          + properties
-        )
+        if engineType == 'ast'
+        then
+          jutils.deepMergeObjectFields(
+            merge(xofParts.allOf)
+            + merge(xofParts.anyOf)
+            + xofParts.oneOf
+            + properties
+          )
         else
           merge(xofParts.allOf)
           + merge(xofParts.anyOf)
