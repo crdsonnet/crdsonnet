@@ -6,7 +6,7 @@ Invalid parameters:
         "type": "string"
       }
 RUNTIME ERROR: Assertion failed
-	dynamic.libsonnet:(74:12)-(75:88)	
+	renderEngines/dynamic.libsonnet:(72:12)-(73:88)	
 	example/json_schema_very_simple_validate.libsonnet:18:1-25	$
 	During evaluation	
 

@@ -40,7 +40,7 @@ withRenderEngineType(engineType)
 `withRenderEngineType` is a shortcut to configure an alternative render engine type.
 
 
-Accepted values for `engineType` are "dynamic", "static"
+Accepted values for `engineType` are "dynamic", "static", "ast"
 
 ### fn withSchemaDB
 
@@ -96,7 +96,7 @@ Invalid parameters:
         "type": "string"
       }
 RUNTIME ERROR: Assertion failed
-	dynamic.libsonnet:(74:12)-(75:88)	
+	renderEngines/dynamic.libsonnet:(72:12)-(73:88)	
 	example/json_schema_very_simple_validate.libsonnet:18:1-25	$
 	During evaluation	
 
