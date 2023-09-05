@@ -142,7 +142,7 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
             if jutils.type(part) == 'field' && jutils.isObject(part.expr)
             for member in part.expr.members
           ]
-        else if engineType == 'dynamic' && std.isObject(parts)
+        else if engineType == 'dynamic'
         then
           std.foldl(
             function(acc, k)
