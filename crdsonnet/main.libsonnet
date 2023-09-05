@@ -121,6 +121,7 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
       component,
       schema,
       processor=root.processor.new(),
+      addNewFunction=true,
     ):
       local extendSchema =
         std.mergePatch(
@@ -133,13 +134,16 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
                helpers.properties.withGroupVersionKind(gvk.group, gvk.version, gvk.kind)
              else {})
         );
-      processor.render(name, extendSchema),
-    // FIXME: doesn't work with AST
-    //+ processor.renderEngine.toObject(
-    //  if 'x-kubernetes-group-version-kind' in component
-    //  then processor.renderEngine.newFunction([name])
-    //  else processor.renderEngine.nilvalue
-    //),
+      if addNewFunction
+      then
+        // FIXME: this part doesn't work with AST render engine
+        processor.render(name, extendSchema)
+        + processor.renderEngine.toObject(
+          if 'x-kubernetes-group-version-kind' in component
+          then processor.renderEngine.newFunction([name])
+          else processor.renderEngine.nilvalue
+        )
+      else processor.render(name, extendSchema),
   },
 }
 
