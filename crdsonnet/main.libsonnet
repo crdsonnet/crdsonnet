@@ -133,12 +133,13 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
                helpers.properties.withGroupVersionKind(gvk.group, gvk.version, gvk.kind)
              else {})
         );
-      processor.render(name, extendSchema)
-      + processor.renderEngine.toObject(
-        if 'x-kubernetes-group-version-kind' in component
-        then processor.renderEngine.newFunction([name])
-        else processor.renderEngine.nilvalue
-      ),
+      processor.render(name, extendSchema),
+    // FIXME: doesn't work with AST
+    //+ processor.renderEngine.toObject(
+    //  if 'x-kubernetes-group-version-kind' in component
+    //  then processor.renderEngine.newFunction([name])
+    //  else processor.renderEngine.nilvalue
+    //),
   },
 }
 
