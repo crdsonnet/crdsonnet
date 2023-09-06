@@ -112,10 +112,11 @@
     ],
 
   toObject(object)::
-    '{ %s }' % object,
+    if object == self.nilvalue
+    then ''
+    else '{ %s }' % object,
 
   newFunction(parents)::
-    '{\n %s \n}' %
     this.nestInParents(
       'new',
       parents,

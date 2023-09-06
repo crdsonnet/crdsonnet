@@ -16,4 +16,4 @@ new(engineType)
 
 `new` returns a renderEngine.
 
-Accepted values for `engineType` are "static", "dynamic"
+Accepted values for `engineType` are "static", "dynamic", "ast"

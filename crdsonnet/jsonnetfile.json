@@ -4,6 +4,15 @@
     {
       "source": {
         "git": {
+          "remote": "https://github.com/Duologic/jsonnet-libsonnet.git",
+          "subdir": ""
+        }
+      },
+      "version": "master"
+    },
+    {
+      "source": {
+        "git": {
           "remote": "https://github.com/crdsonnet/validate-libsonnet.git",
           "subdir": ""
         }

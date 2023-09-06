@@ -63,22 +63,22 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
       local renderEngine = _processor.renderEngine;
       local grouping = helpers.getGroupKey(definition.spec.group, groupSuffix);
       local name = helpers.camelCaseKind(this.getKind(definition));
-      std.foldl(
-        function(acc, version)
-          local schema = this.getSchemaForVersion(definition, version);
-          acc
-          + renderEngine.toObject(
-            renderEngine.nestInParents(
+      renderEngine.toObject(
+        std.foldl(
+          function(acc, version)
+            local schema = this.getSchemaForVersion(definition, version);
+            acc
+            + renderEngine.nestInParents(
               [grouping, version.name],
               _processor.render(name, schema)
             )
-          )
-          + renderEngine.newFunction(
-            [grouping, version.name, name]
-          )
-        ,
-        definition.spec.versions,
-        renderEngine.nilvalue,
+            + renderEngine.newFunction(
+              [grouping, version.name, name]
+            )
+          ,
+          definition.spec.versions,
+          renderEngine.nilvalue,
+        )
       ),
     getKind(definition):
       definition.spec.names.kind,
@@ -121,6 +121,7 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
       component,
       schema,
       processor=root.processor.new(),
+      addNewFunction=true,
     ):
       local extendSchema =
         std.mergePatch(
@@ -133,10 +134,16 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
                helpers.properties.withGroupVersionKind(gvk.group, gvk.version, gvk.kind)
              else {})
         );
-      processor.render(name, extendSchema)
-      + (if 'x-kubernetes-group-version-kind' in component
-         then processor.renderEngine.newFunction([name])
-         else processor.renderEngine.nilvalue),
+      if addNewFunction
+      then
+        // FIXME: this part doesn't work with AST render engine
+        processor.render(name, extendSchema)
+        + processor.renderEngine.toObject(
+          if 'x-kubernetes-group-version-kind' in component
+          then processor.renderEngine.newFunction([name])
+          else processor.renderEngine.nilvalue
+        )
+      else processor.render(name, extendSchema),
   },
 }
 
@@ -187,19 +194,19 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
       root.processor.new()
       + root.processor.withRenderEngineType(render);
     local renderEngine = _processor.renderEngine;
-    std.foldl(
-      function(acc, d)
-        local items = std.reverse(std.split(d, '.'));
-        local component = schema.definitions[d];
-        local name = helpers.camelCaseKind(items[0]);
-        acc
-        + renderEngine.toObject(
-          renderEngine.nestInParents(
+    renderEngine.toObject(
+      std.foldl(
+        function(acc, d)
+          local items = std.reverse(std.split(d, '.'));
+          local component = schema.definitions[d];
+          local name = helpers.camelCaseKind(items[0]);
+          acc
+          + renderEngine.nestInParents(
             [items[2], items[1]],
             self.fromOpenAPI(name, component, schema, render=render),
-          )
-        ),
-      std.objectFields(schema.definitions),
-      renderEngine.nilvalue
+          ),
+        std.objectFields(schema.definitions),
+        renderEngine.nilvalue
+      ),
     ),
 }
