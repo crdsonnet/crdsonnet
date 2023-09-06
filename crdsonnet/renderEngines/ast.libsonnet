@@ -138,7 +138,7 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
   withBoolean(schema):: [
     self.functionHelp(
       this.functionName(schema._name),
-      schema + { default: 'true' },
+      schema + { default: true },
     ),
     customField.func(
       j.fieldname.id(this.functionName(schema._name)),
