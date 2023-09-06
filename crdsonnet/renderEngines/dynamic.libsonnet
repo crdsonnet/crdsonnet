@@ -81,7 +81,10 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
     },
 
   withBoolean(schema)::
-    this.functionHelp(this.functionName(schema._name), schema)
+    this.functionHelp(
+      this.functionName(schema._name),
+      schema + { default: true },
+    )
     + {
       [this.functionName(schema._name)](value=true):
         assert this.validate(schema, value);
