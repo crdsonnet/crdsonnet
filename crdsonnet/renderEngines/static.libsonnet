@@ -28,6 +28,8 @@
     ]);
     'with' + std.asciiUpper(n[0]) + n[1:],
 
+  objectSubpackage(schema):: '',
+
   withFunction(schema)::
     |||
       %s(value%s): { %s },
