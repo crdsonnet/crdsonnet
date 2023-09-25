@@ -157,20 +157,19 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
 
       // Merge allOf/anyOf as they can be used in combination with each other
       // Keep oneOf seperate as it they would not be used in combination with each other
+      local _parsed =
+        (if std.get(schema, '_package', false)
+         then r.objectSubpackage(schema)
+         else r.nilvalue)
+        + merge(xofParts.allOf)
+        + merge(xofParts.anyOf)
+        + xofParts.oneOf
+        + properties;
+
       local parsed =
         if engineType == 'ast'
-        then
-          jutils.deepMergeObjectFields(
-            merge(xofParts.allOf)
-            + merge(xofParts.anyOf)
-            + xofParts.oneOf
-            + properties
-          )
-        else
-          merge(xofParts.allOf)
-          + merge(xofParts.anyOf)
-          + xofParts.oneOf
-          + properties;
+        then jutils.deepMergeObjectFields(_parsed)
+        else _parsed;
 
       self.functions(schema)
       + self.nameParsed(schema, parsed),
@@ -182,7 +181,7 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
       + (
         if 'items' in schema
            && std.isObject(schema.items)
-        then self.schema(schema.items + { _parents: [] })
+        then self.schema(schema.items + { _parents: [], _package: true })
         else r.nilvalue
       ),
 

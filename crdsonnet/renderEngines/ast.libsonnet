@@ -52,6 +52,15 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
     ]);
     'with' + std.asciiUpper(n[0]) + n[1:],
 
+  objectSubpackage(schema):: [
+    customField.field(
+      j.fieldname.string('#'),
+      j.literal(
+        d.package.newSub(schema._name, '')
+      )
+    ),
+  ],
+
   functionHelp(functionName, schema)::
     customField.field(
       j.fieldname.string('#' + functionName),
