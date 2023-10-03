@@ -42,13 +42,13 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
     ]),
 
   functionName(name)::
-    local underscores = std.set(std.findSubstr('_', name));
+    local separators = std.set(std.findSubstr('_', name) + std.findSubstr('-', name));
     local n = std.join('', [
-      if std.setMember(i - 1, underscores)
+      if std.setMember(i - 1, separators)
       then std.asciiUpper(name[i])
       else name[i]
       for i in std.range(0, std.length(name) - 1)
-      if !std.setMember(i, underscores)
+      if !std.setMember(i, separators)
     ]);
     'with' + std.asciiUpper(n[0]) + n[1:],
 
