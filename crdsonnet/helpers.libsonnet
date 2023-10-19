@@ -85,4 +85,31 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
       },
     },
   },
+
+  getSchemaTypes(schema):
+    if 'type' in schema
+    then schema.type
+    else if 'allOf' in schema
+    then std.flattenArrays(
+      std.map(
+        self.getSchemaTypes,
+        schema.allOf
+      )
+    )
+    else if 'anyOf' in schema
+    then std.flattenArrays(
+      std.map(
+        self.getSchemaTypes,
+        schema.anyOf
+      )
+    )
+    else if 'oneOf' in schema
+    then std.flattenArrays(
+      std.map(
+        self.getSchemaTypes,
+        schema.oneOf
+      )
+    )
+    else 'string',
+
 }

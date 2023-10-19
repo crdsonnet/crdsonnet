@@ -1,3 +1,4 @@
+local helpers = import '../helpers.libsonnet';
 local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
 {
   local this = self,
@@ -42,11 +43,7 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
           else [
             d.arg(
               'value',
-              type=(
-                if 'type' in schema
-                then schema.type
-                else 'string'
-              ),
+              type=helpers.getSchemaTypes(schema),
               default=(
                 if 'default' in schema
                 then schema.default
