@@ -1,0 +1,34 @@
+name: tests
+on:
+  pull_request: {}
+  push:
+    branches:
+      - main
+      - master
+    
+jobs:
+  test: 
+    name: test
+    runs-on: ubuntu-latest
+    steps: 
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v4
+      - name: make test
+        run: |
+          go install github.com/google/go-jsonnet/cmd/jsonnet@latest
+          go install github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb@latest
+          make test
+
+
+  fmt:
+    name: fmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v4
+      - name: make fmt
+        run: |
+          go install github.com/google/go-jsonnet/cmd/jsonnetfmt@latest
+          make fmt
+          git diff --exit-code
+  
