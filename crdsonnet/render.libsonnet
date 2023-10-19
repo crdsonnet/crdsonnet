@@ -76,7 +76,9 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
          && parsed != r.nilvalue
       then
         r.named(
-          if self.camelCaseFields then xtd.camelcase.toCamelCase(schema._name) else schema._name,
+          if self.camelCaseFields then
+            xtd.camelcase.toCamelCase(schema._name)
+          else schema._name,
           r.toObject(
             parsed
           )
