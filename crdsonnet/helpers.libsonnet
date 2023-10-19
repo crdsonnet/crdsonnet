@@ -88,7 +88,10 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
 
   getSchemaTypes(schema):
     if 'type' in schema
-    then schema.type
+    then
+      if std.isArray(schema.type)
+      then schema.type
+      else [schema.type]
     else if 'allOf' in schema
     then std.flattenArrays(
       std.map(
@@ -110,6 +113,6 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
         schema.oneOf
       )
     )
-    else 'string',
+    else ['string'],
 
 }
