@@ -60,6 +60,16 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
   withRenderEngineType(engineType):
     self.withRenderEngine(renderEngine.new(engineType)),
 
+  '#withCamelCaseFields': d.fn(
+    |||
+      `withCamelCaseFields` configures the render engine to use camelCase field names.
+    |||,
+    args=[],
+  ),
+  withCamelCaseFields(): {
+    renderEngine+: super.renderEngine.withCamelCaseFields(),
+  },
+
   '#withValidation': d.fn(
     |||
       `withValidation` turns on schema validation for render engine 'dynamic'. The `with*()` functions will validate the inputs against the given schema.
