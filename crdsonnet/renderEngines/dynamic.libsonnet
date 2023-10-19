@@ -1,5 +1,7 @@
 local helpers = import '../helpers.libsonnet';
 local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
+local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
+
 {
   local this = self,
 
@@ -19,14 +21,7 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
     ),
 
   functionName(name)::
-    local underscores = std.set(std.findSubstr('_', name));
-    local n = std.join('', [
-      if std.setMember(i - 1, underscores)
-      then std.asciiUpper(name[i])
-      else name[i]
-      for i in std.range(0, std.length(name) - 1)
-      if !std.setMember(i, underscores)
-    ]);
+    local n = xtd.camelcase.toCamelCase(name);
     'with' + std.asciiUpper(n[0]) + n[1:],
 
   objectSubpackage(schema):: {

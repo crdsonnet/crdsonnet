@@ -1,6 +1,8 @@
+local helpers = import './helpers.libsonnet';
 local engines = import './renderEngines/main.libsonnet';
 local jutils = import 'github.com/Duologic/jsonnet-libsonnet/utils.libsonnet';
 local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
+local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
 
 {
   '#': d.package.newSub(
@@ -20,12 +22,17 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
   ),
   new(engineType): {
     engine: engines[engineType],
+    camelCaseFields: false,
     local r = self.engine,
 
     nilvalue: r.nilvalue,
     toObject: r.toObject,
     nestInParents(parents, object): r.nestInParents('', parents, object),
     newFunction: r.newFunction,
+
+    withCamelCaseFields():: {
+      camelCaseFields: true,
+    },
 
     render(schema):
       r.toObject(self.schema(schema)),
@@ -69,7 +76,7 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
          && parsed != r.nilvalue
       then
         r.named(
-          schema._name,
+          if self.camelCaseFields then xtd.camelcase.toCamelCase(schema._name) else schema._name,
           r.toObject(
             parsed
           )

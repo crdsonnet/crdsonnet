@@ -1,4 +1,5 @@
 local crdsonnet = import 'crdsonnet/main.libsonnet';
+local processor = import 'crdsonnet/processor.libsonnet';
 local schemaDB = import 'crdsonnet/schemadb.libsonnet';
 local test = import 'github.com/jsonnet-libs/testonnet/main.libsonnet';
 
@@ -73,7 +74,14 @@ local db =
 ;
 
 local schema = db['https://example.com/schemas/customer'];
-local library = crdsonnet.fromSchema('customer', schema, db);
+local schemaProcessor = processor.new()
+                        + processor.withSchemaDB(db)
+                        + processor.withRenderEngineType('dynamic');
+local library = crdsonnet.schema.render('customer', schema, processor=schemaProcessor);
+
+local schemaProcessorCamelCase = schemaProcessor
+                                 + processor.withCamelCaseFields();
+local libraryCamelCase = crdsonnet.schema.render('customer', schema, processor=schemaProcessorCamelCase);
 
 test.new(std.thisFile)
 + test.case.new(
@@ -84,6 +92,24 @@ test.new(std.thisFile)
     + library.customer.withLastName('Doe')
     + library.customer.shipping_address.withStreetAddress('4B Main Street')
     + library.customer.shipping_address.withCountry(),
+    expected={
+      first_name: 'John',
+      last_name: 'Doe',
+      shipping_address: {
+        street_address: '4B Main Street',
+        country: 'United States of America',
+      },
+    }
+  )
+)
++ test.case.new(
+  name='fromSchema smoke test: camel case',
+  test=test.expect.eq(
+    actual=
+    libraryCamelCase.customer.withFirstName('John')
+    + libraryCamelCase.customer.withLastName('Doe')
+    + libraryCamelCase.customer.shippingAddress.withStreetAddress('4B Main Street')
+    + libraryCamelCase.customer.shippingAddress.withCountry(),
     expected={
       first_name: 'John',
       last_name: 'Doe',
