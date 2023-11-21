@@ -1,6 +1,7 @@
 local helpers = import '../helpers.libsonnet';
 local j = import 'github.com/Duologic/jsonnet-libsonnet/main.libsonnet';
 local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
+local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
 
 {
   local this = self,
