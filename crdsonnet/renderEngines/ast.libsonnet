@@ -281,27 +281,39 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
     this.nestInParents(
       '',
       parents,
-      local params = [j.id('name')];
-      customField.func(
-        j.id('new'),
-        j.binary(
-          '+',
-          [
-            j.functioncall(j.fieldaccess([j.id('self')], j.id('withApiVersion'))),
-            j.functioncall(j.fieldaccess([j.id('self')], j.id('withKind'))),
-            j.functioncall(
-              j.fieldaccess(
-                [
-                  j.id('self'),
-                  j.id('metadata'),
-                ],
-                j.id('withName')
-              ),
-              args=params
+      self.toObject([
+        j.field.field(
+          j.fieldname.string('#new'),
+          j.literal(
+            d.func.new(
+              '`new` creates a new instance',
+              [d.arg('name', d.T.string)],
             ),
-          ],
+          ),
+          nobreak=true,
         ),
-        params=params,
-      ),
+        local params = [j.id('name')];
+        customField.func(
+          j.id('new'),
+          j.binary(
+            '+',
+            [
+              j.functioncall(j.fieldaccess([j.id('self')], j.id('withApiVersion'))),
+              j.functioncall(j.fieldaccess([j.id('self')], j.id('withKind'))),
+              j.functioncall(
+                j.fieldaccess(
+                  [
+                    j.id('self'),
+                    j.id('metadata'),
+                  ],
+                  j.id('withName')
+                ),
+                args=params
+              ),
+            ],
+          ),
+          params=params,
+        ),
+      ])
     ),
 }
