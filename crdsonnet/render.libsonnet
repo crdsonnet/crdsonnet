@@ -29,6 +29,10 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
     toObject: r.toObject,
     nestInParents(parents, object): r.nestInParents('', parents, object),
     newFunction: r.newFunction,
+    mergeFields(fields):
+      if engineType == 'ast'
+      then jutils.deepMergeObjectFields(fields)
+      else fields,
 
     withCamelCaseFields():: {
       camelCaseFields: true,

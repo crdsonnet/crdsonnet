@@ -67,15 +67,16 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
         std.foldl(
           function(acc, version)
             local schema = this.getSchemaForVersion(definition, version);
-            acc
-            + renderEngine.nestInParents(
-              [grouping, version.name],
-              _processor.render(name, schema)
-            )
-            + renderEngine.newFunction(
-              [grouping, version.name, name]
-            )
-          ,
+            renderEngine.mergeFields(
+              acc
+              + renderEngine.newFunction(
+                [grouping, version.name]
+              )
+              + renderEngine.nestInParents(
+                [grouping, version.name],
+                _processor.render(name, schema)
+              )
+            ),
           definition.spec.versions,
           renderEngine.nilvalue,
         )
