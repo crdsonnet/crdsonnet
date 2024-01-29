@@ -70,7 +70,7 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
             renderEngine.mergeFields(
               acc
               + renderEngine.newFunction(
-                [grouping, version.name]
+                [grouping, version.name, name]
               )
               + renderEngine.nestInParents(
                 [grouping, version.name],
