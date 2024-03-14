@@ -4,11 +4,11 @@
     {
       "source": {
         "git": {
-          "remote": "https://github.com/Duologic/jsonnet-libsonnet.git",
+          "remote": "https://github.com/crdsonnet/astsonnet.git",
           "subdir": ""
         }
       },
-      "version": "master"
+      "version": "main"
     },
     {
       "source": {

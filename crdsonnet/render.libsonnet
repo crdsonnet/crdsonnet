@@ -1,6 +1,6 @@
 local helpers = import './helpers.libsonnet';
 local engines = import './renderEngines/main.libsonnet';
-local jutils = import 'github.com/Duologic/jsonnet-libsonnet/utils.libsonnet';
+local astutils = import 'github.com/crdsonnet/astsonnet/utils.libsonnet';
 local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
 local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
 
@@ -31,7 +31,7 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
     newFunction: r.newFunction,
     mergeFields(fields):
       if engineType == 'ast'
-      then jutils.deepMergeObjectFields(fields)
+      then astutils.deepMergeObjectFields(fields)
       else fields,
 
     withCamelCaseFields():: {
@@ -152,7 +152,7 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
           [
             member
             for part in parts
-            if jutils.type(part) == 'field' && jutils.isObject(part.expr)
+            if astutils.type(part) == 'field' && astutils.isObject(part.expr)
             for member in part.expr.members
           ]
         else if engineType == 'dynamic'
@@ -187,7 +187,7 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
       // Deep merge to prevent duplicate keys
       local parsed =
         if engineType == 'ast'
-        then jutils.deepMergeObjectFields(packagedProperties)
+        then astutils.deepMergeObjectFields(packagedProperties)
         else packagedProperties;
 
       self.functions(schema)
