@@ -195,22 +195,23 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
 
   arrayFunctions(schema)::
     local conditional =
-      a.conditional.new(
-        if_expr=a.functioncall.new(
-                  a.fieldaccess.new(
-                    [a.id.new('std')],
-                    a.id.new('isArray'),
+      a.parenthesis.new(
+        a.conditional.new(
+          if_expr=a.functioncall.new(
+                    a.fieldaccess.new(
+                      [a.id.new('std')],
+                      a.id.new('isArray'),
+                    ),
+                  )
+                  + a.functioncall.withArgs(
+                    [a.id.new('value')],
                   ),
-                )
-                + a.functioncall.withArgs(
-                  [a.id.new('value')],
-                ),
-        then_expr=a.id.new('value'),
-      )
-      + a.conditional.withElseExpr(
-        a.array.new([a.id.new('value')])
-      )
-    ;
+          then_expr=a.id.new('value'),
+        )
+        + a.conditional.withElseExpr(
+          a.array.new([a.id.new('value')])
+        )
+      );
     [
       self.functionHelp(
         this.functionName(schema._name),
