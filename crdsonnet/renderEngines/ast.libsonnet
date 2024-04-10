@@ -1,6 +1,6 @@
 local helpers = import '../helpers.libsonnet';
-local j = import 'github.com/Duologic/jsonnet-libsonnet/main.libsonnet';
-local jutils = import 'github.com/Duologic/jsonnet-libsonnet/utils.libsonnet';
+local a = import 'github.com/crdsonnet/astsonnet/main.libsonnet';
+local astutils = import 'github.com/crdsonnet/astsonnet/utils.libsonnet';
 local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
 local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
 
@@ -9,49 +9,33 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
 
   nilvalue:: [],
 
-  // jsonnet-libsonnet provides some formatting with indentation and linebreaks, this customField removes that formatting, ideally this type of formatting should be configurable but I haven't found a good interface for that yet.
-  local customField = {
-    field(fieldname, expr, additive=false, hidden=false):
-      j.field.field(fieldname, expr, additive, hidden)
-      + {
-        toString(indent='', break=''):
-          j.field.field(fieldname, expr, additive, hidden).toString(),
-      },
-    func(fieldname, expr, params=[], hidden=false):
-      j.field.func(fieldname, expr, params, hidden)
-      + {
-        toString(indent='', break=''):
-          j.field.func(fieldname, expr, params, hidden).toString(),
-      },
-  },
-
   nestInParents(name, parents, field)::
     local startParents =
-      if jutils.isObject(field)
+      if astutils.isObject(field)
       then parents[:std.length(parents) - 1]
       else parents;
     local startField =
-      if jutils.isField(field) || jutils.isFunction(field)
+      if astutils.isField(field) || astutils.isFieldFunction(field)
       then field
-      else if jutils.isObject(field)
+      else if astutils.isObject(field)
       then
-        j.field.field(
-          j.fieldname.string(parents[std.length(parents) - 1]),
+        a.field.new(
+          a.string.new(parents[std.length(parents) - 1]),
           field,
-          additive=true,
         )
-      else error '`field` is of type %s, must be a field type' % jutils.type(field);
+        + a.field.withAdditive()
+      else error '`field` is of type %s, must be a field type' % astutils.type(field);
     [
       std.foldr(
         function(p, acc)
           if p == name
           then acc
           else
-            j.field.field(
-              j.fieldname.string(p),
-              j.object.members([acc]),
-              additive=true,
-            ),
+            a.field.new(
+              a.string.new(p),
+              a.object.new([acc]),
+            )
+            + a.field.withAdditive(),
         startParents,
         startField,
       ),
@@ -62,18 +46,18 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
     'with' + std.asciiUpper(n[0]) + n[1:],
 
   objectSubpackage(schema):: [
-    customField.field(
-      j.fieldname.string('#'),
-      j.literal(
+    a.field.new(
+      a.string.new('#'),
+      a.literal.new(
         d.package.newSub(schema._name, '')
       )
     ),
   ],
 
   functionHelp(functionName, schema)::
-    customField.field(
-      j.fieldname.string('#' + functionName),
-      j.literal(  // render docsonnet as literal to avoid docsonnet dependency
+    a.field.new(
+      a.string.new('#' + functionName),
+      a.literal.new(  // render docsonnet as literal to avoid docsonnet dependency
         d.fn(
           help=std.get(schema, 'description', ''),
           args=(
@@ -105,30 +89,31 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
       this.functionName(schema._name),
       schema,
     ),
-    customField.func(
-      j.fieldname.id(this.functionName(schema._name)),
-      expr=
+    a.field_function.new(
+      a.id.new(this.functionName(schema._name)),
       this.toObject(
         this.nestInParents(
           schema._name,
           schema._parents,
-          customField.field(
-            j.fieldname.string(schema._name),
-            j.id('value')
+          a.field.new(
+            a.string.new(schema._name),
+            a.id.new('value')
           ),
         )
       ),
-      params=[
-        if 'default' in schema
-        then
-          j.param.expr(
-            j.id('value'),
-            (if std.isString(schema.default)
-             then j.string(schema.default)
-             else j.literal(schema.default))
-          )
-        else j.param.id('value'),
-      ],
+    )
+    + a.field_function.withParams(
+      a.params.new([
+        a.param.new(a.id.new('value'))
+        + (if 'default' in schema
+           then
+             a.param.withExpr(
+               (if std.isString(schema.default)
+                then a.string.new(schema.default)
+                else a.literal.new(schema.default))
+             )
+           else {}),
+      ]),
     ),
   ],
 
@@ -137,18 +122,17 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
       this.functionName(schema._name),
       schema,
     ),
-    customField.func(
-      j.fieldname.id(this.functionName(schema._name)),
-      expr=
+    a.field_function.new(
+      a.id.new(this.functionName(schema._name)),
       this.toObject(
         this.nestInParents(
           schema._name,
           schema._parents,
-          customField.field(
-            j.fieldname.string(schema._name),
+          a.field.new(
+            a.string.new(schema._name),
             if std.isString(schema.const)
-            then j.string(schema.const)
-            else j.literal(schema.const)
+            then a.string.new(schema.const)
+            else a.literal.new(schema.const)
           ),
         )
       ),
@@ -160,25 +144,26 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
       this.functionName(schema._name),
       schema + { default: true },
     ),
-    customField.func(
-      j.fieldname.id(this.functionName(schema._name)),
-      expr=
+    a.field_function.new(
+      a.id.new(this.functionName(schema._name)),
       this.toObject(
         this.nestInParents(
           schema._name,
           schema._parents,
-          customField.field(
-            j.fieldname.string(schema._name),
-            j.id('value')
+          a.field.new(
+            a.string.new(schema._name),
+            a.id.new('value')
           ),
         )
       ),
-      params=[
-        j.param.expr(
-          j.id('value'),
-          j['true'],
+    )
+    + a.field_function.withParams(
+      a.params.new([
+        a.param.new(a.id.new('value'))
+        + a.param.withExpr(
+          a.literal.new('true')
         ),
-      ],
+      ]),
     ),
   ],
 
@@ -187,132 +172,139 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
       this.functionName(schema._name) + 'Mixin',
       schema,
     ),
-    customField.func(
-      j.fieldname.id(this.functionName(schema._name) + 'Mixin'),
-      expr=
+    a.field_function.new(
+      a.id.new(this.functionName(schema._name) + 'Mixin'),
       this.toObject(
         this.nestInParents(
           schema._name,
           schema._parents,
-          customField.field(
-            j.fieldname.string(schema._name),
-            j.id('value'),
-            additive=true,
-          ),
+          a.field.new(
+            a.string.new(schema._name),
+            a.id.new('value'),
+          )
+          + a.field.withAdditive(),
         )
       ),
-      params=[
-        j.param.id('value'),
-      ],
+    )
+    + a.field_function.withParams(
+      a.params.new([
+        a.id.new('value'),
+      ]),
     ),
   ],
 
   arrayFunctions(schema)::
     local conditional =
-      j.conditional(
-        ifexpr=j.functioncall(
-          j.fieldaccess(
-            [j.id('std')],
-            j.id('isArray'),
-          ),
-          args=[j.id('value')],
-        ),
-        thenexpr=j.id('value'),
-        elseexpr=j.array.items([j.id('value')]),
+      a.parenthesis.new(
+        a.conditional.new(
+          if_expr=a.functioncall.new(
+                    a.fieldaccess.new(
+                      [a.id.new('std')],
+                      a.id.new('isArray'),
+                    ),
+                  )
+                  + a.functioncall.withArgs(
+                    [a.id.new('value')],
+                  ),
+          then_expr=a.id.new('value'),
+        )
+        + a.conditional.withElseExpr(
+          a.array.new([a.id.new('value')])
+        )
       );
     [
       self.functionHelp(
         this.functionName(schema._name),
         schema,
       ),
-      customField.func(
-        j.fieldname.id(this.functionName(schema._name)),
-        expr=
+      a.field_function.new(
+        a.id.new(this.functionName(schema._name)),
         this.toObject(
           this.nestInParents(
             schema._name,
             schema._parents,
-            customField.field(
-              j.fieldname.string(schema._name),
+            a.field.new(
+              a.string.new(schema._name),
               conditional
             ),
           )
         ),
-        params=[
-          j.param.id('value'),
-        ],
+      )
+      + a.field_function.withParams(
+        a.params.new([
+          a.id.new('value'),
+        ]),
       ),
       self.functionHelp(
         this.functionName(schema._name) + 'Mixin',
         schema,
       ),
-      customField.func(
-        j.fieldname.id(this.functionName(schema._name) + 'Mixin'),
-        expr=
+      a.field_function.new(
+        a.id.new(this.functionName(schema._name) + 'Mixin'),
         this.toObject(
           this.nestInParents(
             schema._name,
             schema._parents,
-            customField.field(
-              j.fieldname.string(schema._name),
+            a.field.new(
+              a.string.new(schema._name),
               conditional,
-              additive=true,
-            ),
+            )
+            + a.field.withAdditive(),
           )
         ),
-        params=[
-          j.param.id('value'),
-        ],
+      )
+      + a.field_function.withParams(
+        a.params.new([
+          a.id.new('value'),
+        ]),
       ),
     ],
 
   named(name, expr):: [
-    j.field.field(
-      j.string(name),
+    a.field.new(
+      a.string.new(name),
       expr,
-      additive=true
-    ),
+    )
+    + a.field.withAdditive(),
   ],
 
   toObject(members)::
-    j.object.members(members),
+    a.object.new(members),
 
   newFunction(parents)::
     this.nestInParents(
       '',
       parents,
       self.toObject([
-        j.field.field(
-          j.fieldname.string('#new'),
-          j.literal(
+        a.field.new(
+          a.string.new('#new'),
+          a.literal.new(
             d.func.new(
               '`new` creates a new instance',
               [d.arg('name', d.T.string)],
             ),
           ),
-          nobreak=true,
         ),
-        local params = [j.id('name')];
-        customField.func(
-          j.id('new'),
-          j.binary(
-            '+',
-            [
-              j.functioncall(j.fieldaccess([j.id('self')], j.id('withApiVersion'))),
-              j.functioncall(j.fieldaccess([j.id('self')], j.id('withKind'))),
-              j.functioncall(
-                j.fieldaccess(
-                  [
-                    j.id('self'),
-                    j.id('metadata'),
-                  ],
-                  j.id('withName')
-                ),
-                args=params
+        local params = [a.id.new('name')];
+        a.field_function.new(
+          a.id.new('new'),
+          a.binary_sum.new([
+            a.functioncall.new(a.fieldaccess.new([a.id.new('self')], a.id.new('withApiVersion'))),
+            a.functioncall.new(a.fieldaccess.new([a.id.new('self')], a.id.new('withKind'))),
+            a.functioncall.new(
+              a.fieldaccess.new(
+                [
+                  a.id.new('self'),
+                  a.id.new('metadata'),
+                ],
+                a.id.new('withName')
               ),
-            ],
-          ),
-          params=params,
+            )
+            + a.functioncall.withArgs(params),
+          ]),
+        )
+        + a.field_function.withParams(
+          a.params.new(params),
         ),
       ])
     ),
