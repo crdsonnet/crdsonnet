@@ -119,7 +119,10 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
           + handle(schema, 'oneOf'),
       },
 
-    const(schema): r.withConstant(schema),
+    const(schema):
+      if '_name' in schema
+      then r.withConstant(schema)
+      else r.nilvalue,
 
     boolean(schema):
       if '_name' in schema
