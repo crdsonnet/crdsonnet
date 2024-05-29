@@ -76,8 +76,8 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
               type: 'string',
             },
             writeConnectionSecretToRef: {
-              properties: { name: { type: 'string' } },
-              required: ['name'],
+              properties: { name: { type: 'string' }, namespace: { type: 'string' } },
+              required: ['name', 'namespace'],
               type: 'object',
             },
           },
