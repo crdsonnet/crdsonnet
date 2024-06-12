@@ -1,4 +1,6 @@
 {
+  assert std.trace('CRDsonnet - DEPRECATION NOTICE - please use the AST engine', true),
+
   local this = self,
 
   nilvalue:: '',

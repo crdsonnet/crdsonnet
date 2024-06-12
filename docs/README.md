@@ -1,7 +1,6 @@
 # crdsonnet
 
 Generate a *runtime* Jsonnet library directly from JSON Schemas, CRDs or OpenAPI components.
-
 ## Install
 
 ```
@@ -15,19 +14,18 @@ local crdsonnet = import 'github.com/crdsonnet/crdsonnet/crdsonnet/main.libsonne
 
 local schema = import './example_schema.json';
 
-local lib = crdsonnet.schema.render('customer', schema);
-local c = lib.customer;
+local staticProcessor = crdsonnet.processor.new('ast');
 
-c.withFirstName('John')
-+ c.withLastName('Doe')
+crdsonnet.schema.render('customer', schema, staticProcessor).toString()
 
 ```
 
+
 ## Subpackages
 
-* [processor](crdsonnet/processor.md)
-* [renderEngine](crdsonnet/renderEngine.md)
-* [schemaDB](crdsonnet/schemaDB.md)
+* [processor](processor.md)
+* [renderEngine](renderEngine.md)
+* [schemaDB](schemaDB.md)
 
 ## Index
 
@@ -47,41 +45,67 @@ c.withFirstName('John')
 
 #### fn crd.render
 
-```ts
-render(definition, groupSuffix, processor="processor.new()")
+```jsonnet
+crd.render(definition, groupSuffix, processor="processor.new()")
 ```
 
-`render` returns a library for a `definition`.
+PARAMETERS:
 
+* **definition** (`object`)
+* **groupSuffix** (`string`)
+* **processor** (`object`)
+   - default value: `"processor.new()"`
+
+`render` returns a library for a `definition`.
 ### obj openapi
 
 
 #### fn openapi.render
 
-```ts
-render(name, component, schema, processor="processor.new()")
+```jsonnet
+openapi.render(name, component, schema, processor="processor.new()")
 ```
 
-`render` returns a library for a `component` in an OpenAPI `schema`.
+PARAMETERS:
 
+* **name** (`string`)
+* **component** (`object`)
+* **schema** (`object`)
+* **processor** (`object`)
+   - default value: `"processor.new()"`
+
+`render` returns a library for a `component` in an OpenAPI `schema`.
 ### obj schema
 
 
 #### fn schema.render
 
-```ts
-render(name, schema, processor="processor.new()")
+```jsonnet
+schema.render(name, schema, processor="processor.new()")
 ```
 
-`render` returns a library for a `schema`.
+PARAMETERS:
 
+* **name** (`string`)
+* **schema** (`object`)
+* **processor** (`object`)
+   - default value: `"processor.new()"`
+
+`render` returns a library for a `schema`.
 ### obj xrd
 
 
 #### fn xrd.render
 
-```ts
-render(definition, groupSuffix, processor="processor.new()")
+```jsonnet
+xrd.render(definition, groupSuffix, processor="processor.new()")
 ```
+
+PARAMETERS:
+
+* **definition** (`object`)
+* **groupSuffix** (`string`)
+* **processor** (`object`)
+   - default value: `"processor.new()"`
 
 `render` returns a library for a `definition`.

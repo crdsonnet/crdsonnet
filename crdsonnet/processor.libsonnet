@@ -16,9 +16,9 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
       `new` initializes the processor with sane defaults, returning a parser() and render() function.
     |||,
   ),
-  new(): {
+  new(engine='dynamic'): {
     schemaDB: {},
-    renderEngine: renderEngine.new('dynamic'),
+    renderEngine: renderEngine.new(engine),
     parse(name, schema):
       parser.parseSchema(
         name,

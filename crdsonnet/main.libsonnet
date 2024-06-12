@@ -1,4 +1,5 @@
 local helpers = import './helpers.libsonnet';
+local legacy = import './legacy.libsonnet';
 local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
 
 {
@@ -13,7 +14,7 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
     + d.package.withUsageTemplate(
       '%(json_schema_simple)s' % {
         json_schema_simple: std.strReplace(
-          importstr './example/json_schema_simple.libsonnet',
+          importstr './example/json_schema_ast.libsonnet',
           '../main.libsonnet',
           'github.com/crdsonnet/crdsonnet/crdsonnet/main.libsonnet',
         ),
@@ -147,67 +148,4 @@ local d = import 'github.com/jsonnet-libs/docsonnet/doc-util/main.libsonnet';
       else processor.render(name, extendSchema),
   },
 }
-
-// Legacy API endpoints
-// These endpoints aren't very flexible and require more arguments to add features, this is an anti-pattern. They have been reimplemented to use above modular setup as an example and to verify the modular pattern works. These functions are covered by unit tests.
-+ {
-  local root = self,
-  local defaultRender = 'dynamic',
-
-  fromSchema(name, schema, schemaDB={}, render=defaultRender):
-    if name == ''
-    then error "name can't be an empty string"
-    else
-      local _processor =
-        root.processor.new()
-        + root.processor.withSchemaDB(schemaDB)
-        + root.processor.withRenderEngineType(render);
-      self.schema.render(name, schema, _processor),
-
-  fromCRD(definition, groupSuffix, schemaDB={}, render=defaultRender):
-    local _processor =
-      root.processor.new()
-      + root.processor.withSchemaDB(schemaDB)
-      + root.processor.withRenderEngineType(render);
-    self.crd.render(definition, groupSuffix, _processor),
-
-  // XRD: Crossplane CompositeResourceDefinition
-  fromXRD(definition, groupSuffix, schemaDB={}, render=defaultRender):
-    local _processor =
-      root.processor.new()
-      + root.processor.withSchemaDB(schemaDB)
-      + root.processor.withRenderEngineType(render);
-    self.xrd.render(definition, groupSuffix, _processor),
-
-  fromOpenAPI(name, component, schema, schemaDB={}, render=defaultRender):
-    if name == ''
-    then error "name can't be an empty string"
-    else
-      local _processor =
-        root.processor.new()
-        + root.processor.withSchemaDB(schemaDB)
-        + root.processor.withRenderEngineType(render);
-      self.openapi.render(name, component, schema, _processor),
-
-  // expects schema as rendered by `kubectl get --raw /openapi/v2`
-  fromKubernetesOpenAPI(schema, render=defaultRender):
-    local _processor =
-      root.processor.new()
-      + root.processor.withRenderEngineType(render);
-    local renderEngine = _processor.renderEngine;
-    renderEngine.toObject(
-      std.foldl(
-        function(acc, d)
-          local items = std.reverse(std.split(d, '.'));
-          local component = schema.definitions[d];
-          local name = helpers.camelCaseKind(items[0]);
-          acc
-          + renderEngine.nestInParents(
-            [items[2], items[1]],
-            self.fromOpenAPI(name, component, schema, render=render),
-          ),
-        std.objectFields(schema.definitions),
-        renderEngine.nilvalue
-      ),
-    ),
-}
++ legacy
