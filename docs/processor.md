@@ -6,6 +6,7 @@
 ## Index
 
 * [`fn new()`](#fn-new)
+* [`fn withCamelCaseFields()`](#fn-withcamelcasefields)
 * [`fn withRenderEngine(engine)`](#fn-withrenderengine)
 * [`fn withRenderEngineType(engineType)`](#fn-withrenderenginetype)
 * [`fn withSchemaDB(db)`](#fn-withschemadb)
@@ -15,47 +16,65 @@
 
 ### fn new
 
-```ts
+```jsonnet
 new()
 ```
 
+
 `new` initializes the processor with sane defaults, returning a parser() and render() function.
 
+### fn withCamelCaseFields
+
+```jsonnet
+withCamelCaseFields()
+```
+
+
+`withCamelCaseFields` configures the render engine to use camelCase field names.
 
 ### fn withRenderEngine
 
-```ts
+```jsonnet
 withRenderEngine(engine)
 ```
 
-`withRenderEngine` configures an alternative render engine. This can be created with `crdsonnet.renderEngine`.
+PARAMETERS:
 
+* **engine** (`object`)
+
+`withRenderEngine` configures an alternative render engine. This can be created with `crdsonnet.renderEngine`.
 
 ### fn withRenderEngineType
 
-```ts
+```jsonnet
 withRenderEngineType(engineType)
 ```
 
+PARAMETERS:
+
+* **engineType** (`string`)
+   - valid values: `"ast"`, `"dynamic"`, `"static"`
+
 `withRenderEngineType` is a shortcut to configure an alternative render engine type.
-
-
-Accepted values for `engineType` are "dynamic", "static", "ast"
 
 ### fn withSchemaDB
 
-```ts
+```jsonnet
 withSchemaDB(db)
 ```
 
-`withSchemaDB` adds additional schema databases. These can be created with `crdsonnet.schemaDB`.
+PARAMETERS:
 
+* **db** (`object`)
+
+`withSchemaDB` adds additional schema databases. These can be created with `crdsonnet.schemaDB`.
 
 ### fn withValidation
 
-```ts
+```jsonnet
 withValidation()
 ```
+
 
 `withValidation` turns on schema validation for render engine 'dynamic'. The `with*()` functions will validate the inputs against the given schema.
 
@@ -102,4 +121,3 @@ RUNTIME ERROR: Assertion failed
 
 
 ```
-

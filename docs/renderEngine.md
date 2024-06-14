@@ -10,10 +10,13 @@
 
 ### fn new
 
-```ts
+```jsonnet
 new(engineType)
 ```
 
-`new` returns a renderEngine.
+PARAMETERS:
 
-Accepted values for `engineType` are "static", "dynamic", "ast"
+* **engineType** (`string`)
+   - valid values: `"ast"`, `"dynamic"`, `"static"`
+
+`new` returns a renderEngine.
