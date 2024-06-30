@@ -49,7 +49,11 @@ local schemadb_util = import './schemadb.libsonnet';
 
   resolveRef(obj, schema, schemaDB):
     if '$ref' in obj
-    then self.resolve(obj['$ref'], schema, schemaDB)
+    then
+      std.mergePatch(
+        std.mergePatch(obj, { '$ref': null }),  // Remove $ref
+        self.resolve(obj['$ref'], schema, schemaDB)  // Merge with sibling keywords (=>draft-2019-09)
+      )
     else obj,
 
   resolve(ref, schema, schemaDB):
