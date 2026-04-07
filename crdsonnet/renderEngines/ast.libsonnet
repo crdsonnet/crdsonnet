@@ -142,7 +142,7 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
   withBoolean(schema):: [
     self.functionHelp(
       this.functionName(schema._name),
-      schema + { default: true },
+      schema + { default: if 'default' in schema then schema.default else true },
     ),
     a.field_function.new(
       a.id.new(this.functionName(schema._name)),
@@ -161,7 +161,7 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
       a.params.new([
         a.param.new(a.id.new('value'))
         + a.param.withExpr(
-          a.literal.new('true')
+          a.literal.new(if 'default' in schema then schema.default else true)
         ),
       ]),
     ),

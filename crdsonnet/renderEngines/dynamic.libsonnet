@@ -79,10 +79,10 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
   withBoolean(schema)::
     this.functionHelp(
       this.functionName(schema._name),
-      schema + { default: true },
+      schema + { default: if 'default' in schema then schema.default else true },
     )
     + {
-      [this.functionName(schema._name)](value=true):
+      [this.functionName(schema._name)](value=if 'default' in schema then schema.default else true):
         assert this.validate(schema, value);
         this.nestInParents(schema._name, schema._parents, { [schema._name]: value }),
     },
