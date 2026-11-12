@@ -11,12 +11,8 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
 
   nestInParents(name, parents, object)::
     std.foldr(
-      function(p, acc)
-        if p == name
-        then acc
-        else { [p]+: acc }
-      ,
-      parents,
+      function(p, acc) { [p]+: acc },
+      helpers.outerParents(name, parents),
       object
     ),
 

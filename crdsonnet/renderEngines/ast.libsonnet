@@ -13,7 +13,7 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
     local startParents =
       if astutils.isObject(field)
       then parents[:std.length(parents) - 1]
-      else parents;
+      else helpers.outerParents(name, parents);
     local startField =
       if astutils.isField(field) || astutils.isFieldFunction(field)
       then field
@@ -28,14 +28,11 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
     [
       std.foldr(
         function(p, acc)
-          if p == name
-          then acc
-          else
-            a.field.new(
-              a.string.new(p),
-              a.object.new([acc]),
-            )
-            + a.field.withAdditive(),
+          a.field.new(
+            a.string.new(p),
+            a.object.new([acc]),
+          )
+          + a.field.withAdditive(),
         startParents,
         startField,
       ),
