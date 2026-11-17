@@ -5,6 +5,13 @@ local xtd = import 'github.com/jsonnet-libs/xtd/main.libsonnet';
     local s = xtd.camelcase.split(kind);
     std.asciiLower(s[0]) + std.join('', s[1:]),
 
+  // Drops the last parent if it is the field itself, as the field is rendered by the caller.
+  // Other parents with the same name are real levels in the path and must stay.
+  outerParents(name, parents):
+    if std.length(parents) > 0 && parents[std.length(parents) - 1] == name
+    then parents[:std.length(parents) - 1]
+    else parents,
+
   getGroupKey(group, suffix):
     // If no dedicated API group, then use 'nogroup' key for consistency
     if suffix == group

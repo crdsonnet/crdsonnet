@@ -1,3 +1,5 @@
+local helpers = import '../helpers.libsonnet';
+
 {
   assert std.trace('CRDsonnet - DEPRECATION NOTICE - please use the AST engine', true),
 
@@ -11,11 +13,8 @@
       '{}',  // Remove curly brackets it can be nested in parents
     );
     std.foldr(
-      function(p, acc)
-        if p == name
-        then acc
-        else '"' + p + '"+: { ' + acc + ' }',
-      parents,
+      function(p, acc) '"' + p + '"+: { ' + acc + ' }',
+      helpers.outerParents(name, parents),
       obj
     ),
 
